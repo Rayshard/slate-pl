@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "slate-pl"
+version = "0.1.0"
+description = "Slate Programming Language"
+authors = ["Rayshard Thompson <rayshard.t123@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Rayshard/ede-pl"
+packages = [
+    { include = "slate" }
+]
+exclude = ["TODO"]
+
+[tool.poetry.scripts]
+slate = 'slate.main:cli'
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pylpc = {git = "https://github.com/Rayshard/pylpc.git", rev = "main", develop = false }
+click = "^8.0.3"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=5.2"
+mypy = "^0.930"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
