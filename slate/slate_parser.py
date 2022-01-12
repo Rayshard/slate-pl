@@ -1,8 +1,15 @@
-import os
-from slate.slate_ast import ASTLiteral, ASTModule
-from pylpc.pylpc import Location, ParseError, ParseResult, Parser, Regex, StringStream
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List
+from pylpc.pylpc import Location, ParseError, Parser, Regex, StringStream
 from pylpc.lexer import Lexeme, Lexer, Pattern
-from pylpc.parsers import Map, Seq, Seq3
+from pylpc.parsers import Map, Seq3
+
+from slate.slate_ast import ASTIntegerLiteral, ASTModule
+
+@dataclass
+class Context:
+    modules : Dict[str, ASTModule] = field(default_factory=dict)
 
 LEXER = Lexer([
     Pattern("WS", Regex("\\s+")),
@@ -13,17 +20,17 @@ LEXER = Lexer([
 T_WS = Lexeme(LEXER, "WS")
 T_INTEGER = Lexeme(LEXER, "INTEGER")
 
-INTEGER = Map(T_INTEGER, lambda result: ASTLiteral[int](int(result.value), result.location))
+INTEGER = Map(T_INTEGER, lambda result: ASTIntegerLiteral(int(result.value), result.location.position))
 
-def Module(name: str) -> Parser[ASTModule]:
-    return Map(Seq3(INTEGER, T_WS, INTEGER), lambda result: ASTModule(name, [result.value[0].value, result.value[2].value], result.location))
+def Module(path: str) -> Parser[ASTModule]:
+    return Map(Seq3(INTEGER, T_WS, INTEGER), lambda result: ASTModule(path, [result.value[0].value, result.value[2].value]))
 
-def parse_file(file_path: str) -> ASTModule:
-    file_name, file_ext = os.path.splitext(os.path.basename(file_path))
+def parse_file(path: Path, context: Context):
+    posix_path = path.as_posix()
 
-    if file_ext != ".slt":
-        raise ParseError(Location(file_path), msg="Unable to parse non-slate file. File must has extension '.slt'!")
-
-    with open(file_path) as file:
-        stream = StringStream(file.read(), file_path)
-        return Module(file_name).parse(stream).value
+    if path.suffix != ".slt":
+        raise ParseError(Location(posix_path), msg=f"Unable to parse non-slate file '{posix_path}'. File must has extension '.slt'!")
+    elif posix_path not in context.modules:
+        with path.open() as file:
+            stream = StringStream(file.read(), posix_path)
+            context.modules[posix_path] = Module(posix_path).parse(stream).value

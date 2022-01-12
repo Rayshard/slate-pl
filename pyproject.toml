@@ -14,9 +14,10 @@ exclude = ["TODO"]
 slate = 'slate.main:cli'
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.9,<3.10"
 pylpc = {git = "https://github.com/Rayshard/pylpc.git", rev = "main", develop = false }
 click = "^8.0.3"
+llvmlite = "^0.37.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=5.2"

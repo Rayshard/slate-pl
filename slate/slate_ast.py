@@ -1,72 +1,66 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Any, Dict, Generic, List, TypeVar
-from pylpc.pylpc import Location
+from typing import Any, Dict, List, Type, cast
+from pylpc.pylpc import Position
+
+Serialization = Dict[str, Any]
 
 class ASTNodeType(Enum):
-    MODULE = auto()
-    LITERAL = auto()
+    EXPR = auto()
 
 class ASTNode(ABC):
-    def __init__(self, node_type: ASTNodeType, loc: Location) -> None:
+    def __init__(self, node_type: ASTNodeType, pos: Position) -> None:
         super().__init__()
 
         self.__node_type = node_type
-        self.__location = loc
+        self.__position = pos
 
     def get_node_type(self) -> ASTNodeType:
         return self.__node_type
 
-    def get_location(self) -> Location:
-        return self.__location
+    def get_position(self) -> Position:
+        return self.__position
 
-    @abstractmethod
-    def _on_serialize(self) -> Dict[str, Any]:
-        pass
+class ASTModule:
+    def __init__(self, path: str, nodes: List[ASTNode]) -> None:
+        self.__path = path
+        self.__nodes = nodes
 
-    def serialize(self) -> Dict[str, Any]:
-        data = self._on_serialize()
-        assert 'node_type' not in data
-        assert 'location' not in data
+    def get_path(self) -> str:
+        return self.__path
 
-        data['node_type'] = self.__node_type.name
-        data['location'] = {
-            "name": self.__location.name,
-            "line": self.__location.position.line,
-            "column": self.__location.position.column
-        }
-        return data
+    def get_nodes(self) -> List[ASTNode]:
+        return self.__nodes
 
-class ASTModule(ASTNode):
-    def __init__(self, name: str, stmts: List[ASTNode], loc: Location) -> None:
-        super().__init__(ASTNodeType.MODULE, loc)
+class ASTExprType(Enum):
+    LITERAL = auto()
 
-        self.__name = name
-        self.__stmts = stmts
+class ASTExpr(ASTNode, ABC):
+    def __init__(self, expr_type: ASTExprType, pos: Position) -> None:
+        super().__init__(ASTNodeType.EXPR, pos)
 
-    def get_name(self) -> str:
-        return self.__name
+        self.__expr_type = expr_type
 
-    def get_stmts(self) -> List[ASTNode]:
-        return self.__stmts
+    def get_expr_type(self) -> ASTExprType:
+        return self.__expr_type
 
-    def _on_serialize(self) -> Dict[str, Any]:
-        return {
-            "name": self.__name,
-            "statements": [stmt.serialize() for stmt in self.__stmts]
-        }
+class ASTLiteralType(Enum):
+    INTEGER = auto()
 
-T = TypeVar('T', int, bool)
+class ASTLiteral(ASTExpr, ABC):
+    def __init__(self, lit_type: ASTLiteralType, pos: Position) -> None:
+        super().__init__(ASTExprType.LITERAL, pos)
 
-class ASTLiteral(ASTNode, Generic[T]):
-    def __init__(self, value: T, loc: Location) -> None:
-        super().__init__(ASTNodeType.LITERAL, loc)
+        self.__lit_type = lit_type
 
-        self.__value : T = value
+    def get_lit_type(self) -> ASTLiteralType:
+        return self.__lit_type
 
-    def get_value(self) -> T:
+class ASTIntegerLiteral(ASTLiteral):
+    def __init__(self, value: int, pos: Position) -> None:
+        super().__init__(ASTLiteralType.INTEGER, pos)
+
+        self.__value = value
+
+    def get_value(self) -> int:
         return self.__value
-
-    def _on_serialize(self) -> Dict[str, Any]:
-        return { "value": self.__value }
-

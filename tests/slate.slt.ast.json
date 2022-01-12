@@ -1,0 +1,17 @@
+{
+    "modules": [
+        {
+            "path": "tests/slate.slt",
+            "nodes": [
+                {
+                    "__instance__": "IntergerLiteral",
+                    "value": 123
+                },
+                {
+                    "__instance__": "IntergerLiteral",
+                    "value": 456
+                }
+            ]
+        }
+    ]
+}
