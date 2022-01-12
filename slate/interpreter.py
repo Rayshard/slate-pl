@@ -1,6 +1,5 @@
 from typing import Optional
 import llvmlite.binding as llvm # type: ignore
-from llvmlite import ir as llvm_ir # type: ignore
 from ctypes import CFUNCTYPE, c_int64
 
 ExitCode = int
@@ -8,7 +7,7 @@ ExitCode = int
 __LLVM_INITED : bool = False
 __LLVM_TARGET_MACHINE : Optional[llvm.TargetMachine] = None
 
-def run_llvm(module: llvm_ir.Module, entry_func_name: str) -> ExitCode:
+def run_llvm(module: llvm.ModuleRef, entry_func_name: str) -> ExitCode:
     global __LLVM_INITED, __LLVM_TARGET_MACHINE
 
     if not __LLVM_INITED:
@@ -25,8 +24,7 @@ def run_llvm(module: llvm_ir.Module, entry_func_name: str) -> ExitCode:
     assert __LLVM_TARGET_MACHINE is not None # drops Optional from type
 
     # Create an execution engine
-    engine = llvm.create_mcjit_compiler(llvm.parse_assembly(""), __LLVM_TARGET_MACHINE)
-    engine.add_module(llvm.parse_assembly(str(module)))
+    engine = llvm.create_mcjit_compiler(module, __LLVM_TARGET_MACHINE)
     engine.finalize_object()
     engine.run_static_constructors()
 

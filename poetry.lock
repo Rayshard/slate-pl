@@ -124,7 +124,7 @@ develop = false
 type = "git"
 url = "https://github.com/Rayshard/pylpc.git"
 reference = "main"
-resolved_reference = "ed82c960578eec977c1ae8e71c5b4035e6beeda4"
+resolved_reference = "72a7d2b88aa99a1d50e71e67625cf3c046f1abbd"
 
 [[package]]
 name = "pyparsing"

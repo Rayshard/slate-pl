@@ -49,8 +49,8 @@ class ASTLiteralType(Enum):
     INTEGER = auto()
 
 class Binop(Enum):
-    PLUS = auto()
-    MINUS = auto()
+    ADD = auto()
+    SUB = auto()
     MULTIPLY = auto()
     DIVIDE = auto()
 

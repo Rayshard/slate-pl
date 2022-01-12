@@ -24,16 +24,18 @@ def cli(ctx: click.Context, emit_ast: bool):
 @cli.command(help="Runs the specified file.")
 @click.option('--backend', type=click.Choice(['llvm', 'slate'], case_sensitive=False), required=False, default="llvm")
 @click.option('--emit-ir', is_flag=True)
+@click.option('-O', '--optimize', is_flag=True)
 @click.argument('file_path', type=click.Path(exists=True, dir_okay=False, path_type=Path), required=True, nargs=1)
 @click.pass_context
-def run(ctx: click.Context, backend: str, emit_ir: bool, file_path: Path):
+def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_path: Path):
     cli_context = cast(CLIContext, ctx.find_object(CLIContext))
     parsing_context = slate_parser.Context()
     
     try:
         slate_parser.parse_file(file_path, parsing_context)
     except ParseError as e:
-        print(e)
+        print(e.get_message_with_trace())
+        return
 
     if cli_context.emit_ast:
         import json
@@ -49,19 +51,31 @@ def run(ctx: click.Context, backend: str, emit_ir: bool, file_path: Path):
     exit_code : interpreter.ExitCode = 0
 
     if backend == "llvm":
+        import llvmlite.binding as llvm # type: ignore
         from llvmlite import ir # type: ignore
-        from llvmlite.binding import linker # type: ignore
 
-        ir_module = ir.Module("MODULE")
+
+        ir_module = ir.Module(name="")
 
         for m in parsing_context.modules.values():
             llvm_emitter.visit(m, ir_module)
 
+        compiled_module = llvm.parse_assembly(str(ir_module))
+
+        if optimize:
+            optimizer_builder = llvm.PassManagerBuilder()
+            optimizer_builder.opt_level = 3
+            
+            optimizer = llvm.ModulePassManager()
+            optimizer_builder.populate(optimizer)
+
+            optimizer.run(compiled_module)
+
         if emit_ir:
             with file_path.with_suffix(file_path.suffix + ".ir.ll").open("w") as output_file:
-                output_file.write(str(ir_module))
+                output_file.write(str(compiled_module))
 
-        exit_code = interpreter.run_llvm(ir_module, file_path.as_posix() + "#entry")
+        exit_code = interpreter.run_llvm(compiled_module, file_path.as_posix() + "#entry")
     else:
         raise NotImplementedError(f"backend={backend}")
 

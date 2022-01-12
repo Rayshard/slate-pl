@@ -4,12 +4,48 @@
             "path": "tests/slate.slt",
             "nodes": [
                 {
-                    "__instance__": "IntergerLiteral",
-                    "value": 123
-                },
-                {
-                    "__instance__": "IntergerLiteral",
-                    "value": 456
+                    "__instance__": "BinopExpr",
+                    "op": "ADD",
+                    "lhs": {
+                        "__instance__": "BinopExpr",
+                        "op": "SUB",
+                        "lhs": {
+                            "__instance__": "BinopExpr",
+                            "op": "ADD",
+                            "lhs": {
+                                "__instance__": "IntergerLiteral",
+                                "value": 123
+                            },
+                            "rhs": {
+                                "__instance__": "IntergerLiteral",
+                                "value": 456
+                            }
+                        },
+                        "rhs": {
+                            "__instance__": "BinopExpr",
+                            "op": "DIVIDE",
+                            "lhs": {
+                                "__instance__": "BinopExpr",
+                                "op": "MULTIPLY",
+                                "lhs": {
+                                    "__instance__": "IntergerLiteral",
+                                    "value": 789
+                                },
+                                "rhs": {
+                                    "__instance__": "IntergerLiteral",
+                                    "value": 101112
+                                }
+                            },
+                            "rhs": {
+                                "__instance__": "IntergerLiteral",
+                                "value": 131415
+                            }
+                        }
+                    },
+                    "rhs": {
+                        "__instance__": "IntergerLiteral",
+                        "value": 123
+                    }
                 }
             ]
         }
