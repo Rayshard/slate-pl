@@ -34,6 +34,7 @@ class ASTModule:
 
 class ASTExprType(Enum):
     LITERAL = auto()
+    BINOP = auto()
 
 class ASTExpr(ASTNode, ABC):
     def __init__(self, expr_type: ASTExprType, pos: Position) -> None:
@@ -46,6 +47,29 @@ class ASTExpr(ASTNode, ABC):
 
 class ASTLiteralType(Enum):
     INTEGER = auto()
+
+class Binop(Enum):
+    PLUS = auto()
+    MINUS = auto()
+    MULTIPLY = auto()
+    DIVIDE = auto()
+
+class ASTBinopExpr(ASTExpr):
+    def __init__(self, lhs: ASTExpr, op: Binop, rhs: ASTExpr, pos: Position) -> None:
+        super().__init__(ASTExprType.BINOP, pos)
+
+        self.__lhs = lhs
+        self.__rhs = rhs
+        self.__op = op
+
+    def get_op(self) -> Binop:
+        return self.__op
+
+    def get_lhs(self) -> ASTExpr:
+        return self.__lhs
+
+    def get_rhs(self) -> ASTExpr:
+        return self.__rhs
 
 class ASTLiteral(ASTExpr, ABC):
     def __init__(self, lit_type: ASTLiteralType, pos: Position) -> None:

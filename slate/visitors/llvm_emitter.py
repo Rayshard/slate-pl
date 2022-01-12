@@ -1,4 +1,3 @@
-from typing import Any, Dict, Optional, Union
 from slate.slate_ast import ASTIntegerLiteral, ASTModule, ASTNode
 from llvmlite import ir # type: ignore
 
