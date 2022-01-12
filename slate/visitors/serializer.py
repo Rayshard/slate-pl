@@ -1,5 +1,5 @@
 from typing import Any, Callable, Dict, Optional, Type, Union
-from slate.slate_ast import ASTBinopExpr, ASTIntegerLiteral, ASTModule, ASTNode
+from slate.ast import ASTBinopExpr, ASTIntegerLiteral, ASTModule, ASTNode
 
 Serialization = Dict[str, Any]
 

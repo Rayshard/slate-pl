@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 from pylpc.pylpc import ParseError
 
-from . import slate_parser, interpreter
+from . import parser, interpreter
 from .visitors import serializer, llvm_emitter
 
 @dataclass
@@ -29,10 +29,10 @@ def cli(ctx: click.Context, emit_ast: bool):
 @click.pass_context
 def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_path: Path):
     cli_context = cast(CLIContext, ctx.find_object(CLIContext))
-    parsing_context = slate_parser.Context()
+    parsing_context = parser.Context()
     
     try:
-        slate_parser.parse_file(file_path, parsing_context)
+        parser.parse_file(file_path, parsing_context)
     except ParseError as e:
         print(e.get_message_with_trace())
         return

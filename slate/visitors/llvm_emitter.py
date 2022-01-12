@@ -1,5 +1,5 @@
 from typing import Any, Callable, Dict
-from slate.slate_ast import ASTBinopExpr, ASTIntegerLiteral, ASTModule, ASTNode, Binop
+from slate.ast import ASTBinopExpr, ASTIntegerLiteral, ASTModule, ASTNode, Binop
 from llvmlite import ir # type: ignore
 
 TypeI64 = ir.IntType(64)

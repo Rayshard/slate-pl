@@ -6,7 +6,7 @@ from pylpc.pylpc import Location, ParseError, ParseResult, Parser, Regex, String
 from pylpc.lexer import Lexeme, Lexer, Pattern
 from pylpc.parsers import Map, FirstSuccess, Maybe, Satisfy, Between
 
-from slate.slate_ast import ASTBinopExpr, ASTExpr, ASTIntegerLiteral, ASTModule, Binop
+from slate.ast import ASTBinopExpr, ASTExpr, ASTIntegerLiteral, ASTModule, Binop
 
 @dataclass
 class Context:
