@@ -1,30 +1,31 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Any, Dict, List, Type, cast
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 from pylpc.pylpc import Position
+from slate import typesystem
 
-Serialization = Dict[str, Any]
+from slate.typesystem import ModuleContext, SlateType
 
-class ASTNodeType(Enum):
-    EXPR = auto()
+_T = TypeVar('_T')
 
 class ASTNode(ABC):
-    def __init__(self, node_type: ASTNodeType, pos: Position) -> None:
+    def __init__(self, pos: Position, type_checked: bool = False) -> None:
         super().__init__()
 
-        self.__node_type = node_type
         self.__position = pos
-
-    def get_node_type(self) -> ASTNodeType:
-        return self.__node_type
+        self.__type_checked = type_checked
 
     def get_position(self) -> Position:
         return self.__position
 
+    def is_type_checked(self) -> bool:
+        return self.__type_checked
+
 class ASTModule:
-    def __init__(self, path: str, nodes: List[ASTNode]) -> None:
+    def __init__(self, path: str, nodes: List[ASTNode], ctx: Optional[ModuleContext] = None) -> None:
         self.__path = path
         self.__nodes = nodes
+        self.__ctx = ctx
 
     def get_path(self) -> str:
         return self.__path
@@ -32,21 +33,32 @@ class ASTModule:
     def get_nodes(self) -> List[ASTNode]:
         return self.__nodes
 
-class ASTExprType(Enum):
-    LITERAL = auto()
-    BINOP = auto()
+    def get_ctx(self) -> ModuleContext:
+        assert self.__ctx is not None, "ASTModule is not type checked"
+        return self.__ctx
 
-class ASTExpr(ASTNode, ABC):
-    def __init__(self, expr_type: ASTExprType, pos: Position) -> None:
-        super().__init__(ASTNodeType.EXPR, pos)
+class ASTExport(ASTNode):
+    def __init__(self, node: ASTNode, pos: Position) -> None:
+        super().__init__(pos, node.is_type_checked())
 
-        self.__expr_type = expr_type
+        self.__node = node
 
-    def get_expr_type(self) -> ASTExprType:
-        return self.__expr_type
+    def get_node(self) -> ASTNode:
+        return self.__node
 
-class ASTLiteralType(Enum):
-    INTEGER = auto()
+class ASTStmt(ASTNode, ABC):
+    def __init__(self, pos: Position, type_checked: bool) -> None:
+        super().__init__(pos, type_checked)
+
+class ASTExpr(ASTStmt, ABC):
+    def __init__(self, pos: Position, slate_type: Optional[SlateType]) -> None:
+        super().__init__(pos, slate_type is not None)
+
+        self.__slate_type = slate_type
+
+    def get_slate_type(self) -> SlateType:
+        assert self.__slate_type is not None, "Not type checked!"
+        return self.__slate_type
 
 class Binop(Enum):
     ADD = auto()
@@ -55,8 +67,8 @@ class Binop(Enum):
     DIVIDE = auto()
 
 class ASTBinopExpr(ASTExpr):
-    def __init__(self, lhs: ASTExpr, op: Binop, rhs: ASTExpr, pos: Position) -> None:
-        super().__init__(ASTExprType.BINOP, pos)
+    def __init__(self, lhs: ASTExpr, op: Binop, rhs: ASTExpr, pos: Position, slate_type: Optional[SlateType] = None) -> None:
+        super().__init__(pos, slate_type)
 
         self.__lhs = lhs
         self.__rhs = rhs
@@ -71,20 +83,32 @@ class ASTBinopExpr(ASTExpr):
     def get_rhs(self) -> ASTExpr:
         return self.__rhs
 
-class ASTLiteral(ASTExpr, ABC):
-    def __init__(self, lit_type: ASTLiteralType, pos: Position) -> None:
-        super().__init__(ASTExprType.LITERAL, pos)
-
-        self.__lit_type = lit_type
-
-    def get_lit_type(self) -> ASTLiteralType:
-        return self.__lit_type
-
-class ASTIntegerLiteral(ASTLiteral):
-    def __init__(self, value: int, pos: Position) -> None:
-        super().__init__(ASTLiteralType.INTEGER, pos)
+class ASTLiteral(ASTExpr, Generic[_T], ABC):
+    def __init__(self, value: _T, pos: Position, slate_type: Optional[SlateType]) -> None:
+        super().__init__(pos, slate_type)
 
         self.__value = value
 
-    def get_value(self) -> int:
+    def get_value(self) -> _T:
         return self.__value
+
+class ASTIntegerLiteral(ASTLiteral[int]):
+    def __init__(self, value: int, pos: Position) -> None:
+        super().__init__(value, pos, typesystem.I64())
+
+class ASTVarDecl(ASTStmt):
+    def __init__(self, id: str, constraint: Optional[SlateType], expr: ASTExpr, pos: Position, type_checked: bool = False) -> None:
+        super().__init__(pos, type_checked)
+
+        self.__id = id
+        self.__constraint = constraint
+        self.__expr = expr
+
+    def get_id(self) -> str:
+        return self.__id
+
+    def get_constraint(self) -> Optional[SlateType]:
+        return self.__constraint
+
+    def get_expr(self) -> ASTExpr:
+        return self.__expr

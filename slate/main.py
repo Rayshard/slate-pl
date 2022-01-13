@@ -1,11 +1,13 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 from pathlib import Path
 import click
 from pylpc.pylpc import ParseError
 
+from slate.ast import ASTModule
+
 from . import parser, interpreter
-from .visitors import serializer, llvm_emitter
+from .visitors import serializer, llvm_emitter, typechecker
 
 @dataclass
 class CLIContext:
@@ -29,6 +31,8 @@ def cli(ctx: click.Context, emit_ast: bool):
 @click.pass_context
 def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_path: Path):
     cli_context = cast(CLIContext, ctx.find_object(CLIContext))
+    
+    # Parse
     parsing_context = parser.Context()
     
     try:
@@ -37,12 +41,23 @@ def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_pa
         print(e.get_message_with_trace())
         return
 
+    # Type Check
+    modules : Dict[str, ASTModule] = {}
+
+    for path, module in parsing_context.modules.items():
+        try:
+            modules[path] = typechecker.visit(module)
+        except typechecker.TCError as e:
+            print(e)
+            return
+
+    # Emit AST
     if cli_context.emit_ast:
         import json
 
         with file_path.with_suffix(file_path.suffix + ".ast.json").open("w") as output_file:
             serialization = {
-                "modules": [serializer.visit(m) for m in parsing_context.modules.values()]
+                "modules": [serializer.visit(m) for m in modules.values()]
             }
 
             json.dump(serialization, output_file, indent=4)
@@ -57,7 +72,7 @@ def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_pa
 
         ir_module = ir.Module(name="")
 
-        for m in parsing_context.modules.values():
+        for m in modules.values():
             llvm_emitter.visit(m, ir_module)
 
         compiled_module = llvm.parse_assembly(str(ir_module))

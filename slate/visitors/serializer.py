@@ -1,5 +1,5 @@
 from typing import Any, Callable, Dict, Optional, Type, Union
-from slate.ast import ASTBinopExpr, ASTIntegerLiteral, ASTModule, ASTNode
+from slate.ast import ASTBinopExpr, ASTExpr, ASTIntegerLiteral, ASTModule, ASTNode
 
 Serialization = Dict[str, Any]
 
@@ -31,6 +31,10 @@ def __visit_ASTNode(node: ASTNode) -> Serialization:
     serialization = __VISITORS[type(node)](node)
     assert "__instance__" in serialization
     
+    if node.is_type_checked() and isinstance(node, ASTExpr):
+        assert "__type__" not in serialization
+        serialization["__type__"] = str(node.get_slate_type())
+
     return serialization
 
 def visit(module: ASTModule) -> Serialization:

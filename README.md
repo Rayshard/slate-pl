@@ -30,8 +30,8 @@ let sum = MODULE3.add(1, 2); # [ERROR] MODULE3 does not export the 'add'
 ```
 # module2.slt
 
-export let var1 : i64 = 123;
-export let var2 : i64 = 456;
+@export let var1 : i64 = 123;
+@export let var2 : i64 = 456;
 ```
 
 ```
@@ -39,9 +39,10 @@ export let var2 : i64 = 456;
 
 from std import io;
 
-let add : const (a: i64, b: i64) -> i64 = a + b;
+func add : const (a: i64, b: i64) -> i64 = a + b;
 
-export let print_sum : const (a: i64, b: i64) -> unit = {
+@export
+func print_sum : const (a: i64, b: i64) -> unit = {
     io.print(add(a, b));
 };
 ```
