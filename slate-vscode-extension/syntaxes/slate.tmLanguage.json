@@ -1,0 +1,39 @@
+{
+	"name": "Slate",
+	"fileTypes": [
+		"slate",
+		"slt"
+	],
+	"scopeName": "source.slate",
+
+	"foldingStartMarker": "\\{\\s*$",
+	"foldingStopMarker": "^\\s*\\}",
+
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#expression"
+		}
+	],
+
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.slate",
+					"match": "\\b(let|from|import|alias)\\b"
+				}
+			]
+		},
+		"expression": {
+			"patterns": [
+				{
+					"name": "constant.numeric.slate",
+					"match": "[0-9]+"
+				}
+			]
+		}
+	}
+}
