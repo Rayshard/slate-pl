@@ -112,21 +112,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
-name = "pylpc"
-version = "0.1.0"
-description = "A Lexer and Parser Combinator in Python"
-category = "main"
-optional = false
-python-versions = ">=3.9"
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/Rayshard/pylpc.git"
-reference = "main"
-resolved_reference = "72a7d2b88aa99a1d50e71e67625cf3c046f1abbd"
-
-[[package]]
 name = "pyparsing"
 version = "3.0.6"
 description = "Python parsing module"
@@ -185,7 +170,7 @@ python-versions = ">=3.6"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.10"
-content-hash = "c2c50cdb774cc47c0b2a924c153b162c9ad5fd2ba6af68c01399ba57108f8a5f"
+content-hash = "428cbf77e111740ca4b4d5abdbe94896e1955baaa4c2dba7178e9e48d4331690"
 
 [metadata.files]
 atomicwrites = [
@@ -267,7 +252,6 @@ py = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
     {file = "py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719"},
 ]
-pylpc = []
 pyparsing = [
     {file = "pyparsing-3.0.6-py3-none-any.whl", hash = "sha256:04ff808a5b90911829c55c4e26f75fa5ca8a2f5f36aa3a51f68e27033341d3e4"},
     {file = "pyparsing-3.0.6.tar.gz", hash = "sha256:d9bdec0013ef1eb5a84ab39a3b3868911598afa494f5faa038647101504e2b81"},

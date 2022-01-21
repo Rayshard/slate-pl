@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, cast
 from pathlib import Path
 import click
-from pylpc.pylpc import ParseError
 
 from slate.ast import ASTModule
 
@@ -37,7 +36,7 @@ def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_pa
     
     try:
         parser.parse_file(file_path, parsing_context)
-    except ParseError as e:
+    except parser.ParseError as e:
         print(e.get_message_with_trace())
         return
 

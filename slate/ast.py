@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import Any, Dict, Generic, List, Optional, TypeVar
-from pylpc.pylpc import Position
 from slate import typesystem
 
 from slate.typesystem import ModuleContext, SlateType
+from slate.utilities import Position
 
 _T = TypeVar('_T')
 
@@ -97,8 +97,8 @@ class ASTIntegerLiteral(ASTLiteral[int]):
         super().__init__(value, pos, typesystem.I64())
 
 class ASTVarDecl(ASTStmt):
-    def __init__(self, id: str, constraint: Optional[SlateType], expr: ASTExpr, pos: Position, type_checked: bool = False) -> None:
-        super().__init__(pos, type_checked)
+    def __init__(self, id: str, constraint: Optional[SlateType], expr: ASTExpr, pos: Position) -> None:
+        super().__init__(pos, expr.is_type_checked() and (constraint is None or constraint.same_as(expr.get_slate_type())))
 
         self.__id = id
         self.__constraint = constraint

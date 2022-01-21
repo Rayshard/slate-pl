@@ -2,10 +2,8 @@
 source_filename = "<string>"
 target triple = "unknown-unknown-unknown"
 
-; Function Attrs: norecurse nounwind readnone
-define i64 @"tests/slate.slt#entry"() local_unnamed_addr #0 {
+define i64 @"tests/slate.slt#entry"() {
 start:
-  ret i64 579
+  %.2 = add i64 123, 4561
+  ret i64 %.2
 }
-
-attributes #0 = { norecurse nounwind readnone }

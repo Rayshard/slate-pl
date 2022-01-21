@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List
 from slate.ast import ASTBinopExpr, ASTExport, ASTExpr, ASTIntegerLiteral, ASTModule, ASTNode, ASTVarDecl, Binop
-from slate.typesystem import EnvironmentError, ModuleContext, SlateFunction, SlateType
+from slate.typesystem import EnvironmentDefinition, EnvironmentError, ModuleContext, SlateFunction, SlateType
 from slate.utilities import Location
 
 class TCError(Exception):
@@ -56,10 +56,23 @@ def __visit_ASTBinopExpr(node: ASTBinopExpr, ctx: ModuleContext) -> ASTNode:
     except EnvironmentError as e:
         raise TCError(location, str(e))
 
+def __visit_ASTVarDecl(node: ASTVarDecl, ctx: ModuleContext) -> ASTNode:
+    expr = __visit_ASTNode(node.get_expr(), ctx)
+    assert isinstance(expr, ASTExpr)
+    
+    location = Location(ctx.get_module_path(), node.get_position())
+
+    try:
+        ctx.get_cur_env().define(EnvironmentDefinition(node.get_id(), location, expr.get_slate_type()))
+        return ASTVarDecl(node.get_id(), node.get_constraint(), expr, node.get_position())
+    except EnvironmentError as e:
+        raise TCError(location, str(e))
+
 __VISITORS : Dict[Any, Callable[..., ASTNode]] = {
     ASTIntegerLiteral: __visit_ASTIntegerLiteral,
     ASTBinopExpr: __visit_ASTBinopExpr,
-    ASTExport: __visit_ASTExport
+    ASTExport: __visit_ASTExport,
+    ASTVarDecl: __visit_ASTVarDecl
 }
 
 def __visit_ASTNode(node: ASTNode, ctx: ModuleContext) -> ASTNode:   

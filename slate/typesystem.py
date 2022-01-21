@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from typing import Dict, List, NamedTuple, Optional, Type
 from enum import Enum
 
-from pylpc.pylpc import Position
-
-from slate.utilities import Location
+from slate.utilities import Location, Position
 
 _WORD_SIZE = 8
 
@@ -83,7 +81,7 @@ def UI64() -> _IntType:
     return _UI64
 
 @dataclass(frozen=True)
-class _EnvironmentDefinition:
+class EnvironmentDefinition:
     name: str
     location: Location
     slate_type: SlateType
@@ -93,7 +91,7 @@ class EnvironmentError(Exception):
         super().__init__(msg)
 
     @staticmethod
-    def Redefinition(org_def: _EnvironmentDefinition) -> 'EnvironmentError':
+    def Redefinition(org_def: EnvironmentDefinition) -> 'EnvironmentError':
         return EnvironmentError(f"'{org_def.name}' was already defined at {org_def.location}")
 
     @staticmethod
@@ -103,9 +101,9 @@ class EnvironmentError(Exception):
 class _Environment:
     def __init__(self, parent: Optional['_Environment'] = None) -> None:
         self.__parent = parent
-        self.__definitions : Dict[str, _EnvironmentDefinition] = {}
+        self.__definitions : Dict[str, EnvironmentDefinition] = {}
 
-    def define(self, definition: _EnvironmentDefinition) -> None:
+    def define(self, definition: EnvironmentDefinition) -> None:
         if definition.name in self.__definitions:
             raise EnvironmentError.Redefinition(definition)
 
@@ -117,7 +115,7 @@ class _Environment:
 
         del self.__definitions[name]
 
-    def get_definition(self, name: str, check_parent: bool = False) -> _EnvironmentDefinition:
+    def get_definition(self, name: str, check_parent: bool = False) -> EnvironmentDefinition:
         if name in self.__definitions:
             return self.__definitions[name]
         elif not check_parent or self.__parent is None:
@@ -125,12 +123,15 @@ class _Environment:
         else:
             return self.__parent.get_definition(name, True)
 
+    def is_defined(self, name: str, check_parent: bool = False) -> bool:
+        return name in self.__definitions or (self.__parent is not None and check_parent and self.__parent.is_defined(name, True))
+
     def get_parent(self) -> Optional['_Environment']:
         return self.__parent
 
 def _GenerateDefaultModuleEnv(module_path: str) -> _Environment:
     env = _Environment()
-    env.define(_EnvironmentDefinition("operator+", Location(module_path, Position(1, 1)), SlateFunction([I64(), I64()], I64())))
+    env.define(EnvironmentDefinition("operator+", Location(module_path), SlateFunction([I64(), I64()], I64())))
 
     return env
 
@@ -138,7 +139,7 @@ class ModuleContext:
     def __init__(self, module_path: str) -> None:
         self.__module_path = module_path
         self.__env_chain = [_GenerateDefaultModuleEnv(module_path)]
-        self.__exports : Dict[str, _EnvironmentDefinition] = {}
+        self.__exports : Dict[str, EnvironmentDefinition] = {}
 
     def push_env(self) -> _Environment:
         self.__env_chain.append(_Environment(self.__env_chain[-1]))
@@ -152,12 +153,12 @@ class ModuleContext:
         assert len(self.__env_chain) != 0
         return self.__env_chain[-1]
 
-    def add_export(self, name: str, definintion: _EnvironmentDefinition) -> None:
+    def add_export(self, name: str, definintion: EnvironmentDefinition) -> None:
         assert name not in self.__exports
         self.__exports[name] = definintion
 
     def get_module_path(self) -> str:
         return self.__module_path
 
-    def get_exports(self) -> Dict[str, _EnvironmentDefinition]:
+    def get_exports(self) -> Dict[str, EnvironmentDefinition]:
         return self.__exports
