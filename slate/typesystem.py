@@ -132,6 +132,9 @@ class _Environment:
 def _GenerateDefaultModuleEnv(module_path: str) -> _Environment:
     env = _Environment()
     env.define(EnvironmentDefinition("operator+", Location(module_path), SlateFunction([I64(), I64()], I64())))
+    env.define(EnvironmentDefinition("operator-", Location(module_path), SlateFunction([I64(), I64()], I64())))
+    env.define(EnvironmentDefinition("operator*", Location(module_path), SlateFunction([I64(), I64()], I64())))
+    env.define(EnvironmentDefinition("operator/", Location(module_path), SlateFunction([I64(), I64()], I64())))
 
     return env
 

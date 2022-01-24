@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, cast
 from pathlib import Path
 import click
+import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 from slate.ast import ASTModule
 
@@ -54,12 +56,13 @@ def run(ctx: click.Context, backend: str, emit_ir: bool, optimize: bool, file_pa
     if cli_context.emit_ast:
         import json
 
-        with file_path.with_suffix(file_path.suffix + ".ast.json").open("w") as output_file:
-            serialization = {
-                "modules": [serializer.visit(m) for m in modules.values()]
-            }
+        with file_path.with_suffix(file_path.suffix + ".ast.xml").open("w") as output_file:
+            serialization = ET.Element("AST")
+            
+            for m in modules.values():
+                serialization.append(serializer.visit(m))
 
-            json.dump(serialization, output_file, indent=4)
+            output_file.write(xml.dom.minidom.parseString(ET.tostring(serialization, 'unicode')).toprettyxml(indent='    '))
 
     # Interpret program
     exit_code : interpreter.ExitCode = 0

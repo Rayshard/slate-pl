@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<AST>
+    <Module path="tests/slate.slt">
+        <VarDecl id="x" constraint="None">
+            <BinopExpr op="ADD" slate_type="ui8">
+                <IntergerLiteral value="123" slate_type="ui8"/>
+                <BinopExpr op="DIVIDE" slate_type="ui8">
+                    <BinopExpr op="MULTIPLY" slate_type="ui8">
+                        <IntergerLiteral value="456" slate_type="ui8"/>
+                        <IntergerLiteral value="789" slate_type="ui8"/>
+                    </BinopExpr>
+                    <IntergerLiteral value="101112" slate_type="ui8"/>
+                </BinopExpr>
+            </BinopExpr>
+        </VarDecl>
+    </Module>
+</AST>

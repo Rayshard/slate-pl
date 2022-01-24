@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<program slasm_version="1.0">
+    <code entry="Main">
+        <function name="Main" params="0" locals="0">
+            <PUSH value="0x000000000000007b"/>
+            <SYSCALL_LINUX code="33554433" num_params="1"/>
+            <RET/>
+        </function>
+    </code>
+</program>
