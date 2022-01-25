@@ -1,22 +1,48 @@
-from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 
 _VERSION = "1.0"
 
-class OpCodes(Enum):
+class OpCode(Enum):
     NOOP = 0
-    PUSH = auto()
+
+    PUSH_CONSTANT = auto()
+    PUSH_LABEL = auto()
     POP = auto()
+
+    SLOAD = auto()
+    SSTORE = auto()
+    LLOAD = auto()
+    LSTORE = auto()
+    PLOAD = auto()
+    PSTORE = auto()
+    GLOAD = auto()
+    GSTORE = auto()
+    MLOAD = auto()
+    MSTORE = auto()
+
+    ADD = auto()
+    SUB = auto()
+    MUL = auto()
+    DIV = auto()
+    EQ = auto()
+    NEQ = auto()
+
+    JUMP = auto()
+    JUMPZ = auto()
+    JUMPNZ = auto()
+    CALL = auto()
     RET = auto()
+
     SYSCALL_LINUX = auto()
+    SYSCALL_WINDOWS = auto()
 
     def to_bytes(self) -> bytes:
         return bytes([cast(int, self.value)])
 
-assert len(OpCodes) <= 256
+assert len(OpCode) <= 256
 
 class Word:
     def __init__(self, bs: bytes) -> None:
@@ -69,46 +95,132 @@ class BinaryContext:
     def has_entry(self) -> bool:
         return self.__entry is not None
 
-Operand = Union[Word, str]
+_TOperand = TypeVar("_TOperand")
+Operand = Any
 
-class Instruction(ABC):
-    def __init__(self, opcode: OpCodes) -> None:
+class Instruction:
+    def __init__(self, opcode: OpCode, operands: List[Operand], size: int) -> None:
         self.__opcode = opcode
+        self.__operands = operands
+        self.__size = size
 
-    def get_opcode(self) -> OpCodes:
+    def get_opcode(self) -> OpCode:
         return self.__opcode
+
+    def get_size(self) -> int:
+        return self.__size
+
+    def get_operands(self) -> List[Operand]:
+        return self.__operands
+
+    def get_operand(self, idx: int, op_type: Type[_TOperand]) -> _TOperand:
+        assert idx < len(self.__operands)
+        assert type(self.__operands[idx]) == op_type
+        return cast(op_type, self.__operands[idx]) # type: ignore
 
     def to_binary(self, ctx: BinaryContext) -> bytes:
         binary = bytearray(self.__opcode.to_bytes())
 
-        for operand in self.get_operands(ctx):
-            binary.extend(operand)
+        if self.__opcode == OpCode.NOOP:
+            pass
+        elif self.__opcode == OpCode.PUSH:
+            binary.extend(self.get_operand(0, Word).bytes)
+        elif self.__opcode == OpCode.POP:
+            pass
+        elif self.__opcode == OpCode.RET:
+            pass
+        elif self.__opcode == OpCode.SYSCALL_LINUX:
+            binary.extend(Word.FromUI64(self.get_operand(0, int)).bytes)
+            binary.extend(Word.FromUI64(self.get_operand(1, int)).bytes[:1])
+        else:
+            assert False, "Not implemented"
 
         return bytes(binary)
 
-    @abstractmethod
     def to_xml(self) -> ET.Element:
-        pass    
+        if self.__opcode == OpCode.NOOP:
+            return ET.Element("NOOP")
+        elif self.__opcode == OpCode.PUSH:
+            return ET.Element("PUSH", {"value": self.get_operand(0, Word).as_hex()})
+        elif self.__opcode == OpCode.POP:
+            return ET.Element("POP")
+        elif self.__opcode == OpCode.RET:
+            return ET.Element("RET")
+        elif self.__opcode == OpCode.SYSCALL_LINUX:
+            return ET.Element("SYSCALL_LINUX", {"code": str(self.get_operand(0, int)), "num_params": str(self.get_operand(1, int))})
+        
+        assert False, "Not implemented"    
 
-    @abstractmethod
     def to_nasm(self) -> str:
-        pass        
+        string : str = ""
 
-    @abstractmethod
-    def get_operands(self, ctx: BinaryContext) -> List[bytes]:
-        pass
+        if self.__opcode == OpCode.NOOP:
+            string = "; NOOP\nXCHG RAX, RAX"
+        elif self.__opcode == OpCode.PUSH:
+            value_hex = self.get_operand(0, Word).as_hex()
+            string = f"; PUSH {value_hex}\nMOV RAX, {value_hex}\nPUSH RAX"
+        elif self.__opcode == OpCode.POP:
+            string = "; POP\nPOP RAX"
+        elif self.__opcode == OpCode.RET:
+            string = "; RET\nRET"
+        elif self.__opcode == OpCode.SYSCALL_LINUX:
+            __PARAM_REGISTERS = ["RDI", "RSI", "RDX", "R10", "R8", "R9"]
+            syscall_code, num_params = self.get_operand(0, int), self.get_operand(1, int)
+            string = f"; SYSCALL_LINUX {syscall_code}, {num_params}\nMOV RAX, {syscall_code}"
+
+            for i in range(num_params):
+                string += f"\nPOP {__PARAM_REGISTERS[i]}"
+
+            string += "\nSYSCALL"
+        else:
+            assert False, "Not implemented"       
+        
+        return string 
 
     def __str__(self) -> str:
         return xml.dom.minidom.parseString(ET.tostring(self.to_xml(), 'unicode')).toprettyxml(indent='    ')
 
     @staticmethod
-    def GetSize(opcode: OpCodes) -> int:
-        if opcode == OpCodes.PUSH:
-            return 9
-        elif opcode == OpCodes.SYSCALL_LINUX:
-            return 10
-        else:
-            return 1
+    def FromBytes(bs: bytes) -> 'Instruction':
+        assert len(bs) > 0 and bs[0] < len(OpCode)
+        opcode = OpCode(bs[0])
+
+        if opcode == OpCode.NOOP:
+            return Instruction.Noop()
+        elif opcode == OpCode.PUSH:
+            value = Word(bs[1:Word.SIZE() + 1])
+            return Instruction.Push(value)
+        elif opcode == OpCode.POP:
+            return Instruction.Pop()
+        elif opcode == OpCode.RET:
+            return Instruction.Ret()
+        elif opcode == OpCode.SYSCALL_LINUX:
+            syscall_code = int.from_bytes(bs[1:Word.SIZE()], 'big', signed=False)
+            num_params = int.from_bytes(bs[1 + Word.SIZE():2 + Word.SIZE()], 'big', signed=False)
+            return Instruction.SyscallLinux(syscall_code, num_params)
+        
+        assert False, "Not implemented"
+
+    @staticmethod
+    def Noop() -> 'Instruction':
+        return Instruction(OpCode.NOOP, [], 1)
+
+    @staticmethod
+    def Push(value: Word) -> 'Instruction':
+        return Instruction(OpCode.PUSH, [value], 9)
+
+    @staticmethod
+    def Pop() -> 'Instruction':
+        return Instruction(OpCode.POP, [], 1)
+
+    @staticmethod
+    def Ret() -> 'Instruction':
+        return Instruction(OpCode.RET, [], 1)
+
+    @staticmethod
+    def SyscallLinux(code: int, num_params: int) -> 'Instruction':
+        assert num_params <= 6
+        return Instruction(OpCode.SYSCALL_LINUX, [code, num_params], 10)
 
 class Function:
     def __init__(self, name: str, num_params: int, num_locals: int) -> None:
@@ -120,7 +232,7 @@ class Function:
 
     def insert_instr(self, instr: Instruction) -> None:
         self.__instructions.append(instr)
-        self.__size += Instruction.GetSize(instr.get_opcode())
+        self.__size += instr.get_size()
 
     def get_name(self) -> str:
         return self.__name
