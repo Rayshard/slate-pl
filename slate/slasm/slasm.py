@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast, Literal, Union
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 
@@ -8,107 +8,101 @@ _VERSION = "1.0"
 class OpCode(Enum):
     NOOP = 0
 
-    PUSH_CONSTANT = auto()
-    PUSH_LABEL = auto()
-    POP = auto()
+    LOAD_CONST = auto()
+    LOAD_LABEL = auto()
+    LOAD_LOCAL = auto()
+    LOAD_PARAM = auto()
+    LOAD_GLOBAL = auto()
+    LOAD_MEM = auto()
 
-    SLOAD = auto()
-    SSTORE = auto()
-    LLOAD = auto()
-    LSTORE = auto()
-    PLOAD = auto()
-    PSTORE = auto()
-    GLOAD = auto()
-    GSTORE = auto()
-    MLOAD = auto()
-    MSTORE = auto()
+    POP = auto()
+    STORE_LOCAL = auto()
+    STORE_PARAM = auto()
+    STORE_GLOBAL = auto()
+    STORE_MEM = auto()
 
     ADD = auto()
     SUB = auto()
     MUL = auto()
     DIV = auto()
+    MOD = auto()
     EQ = auto()
     NEQ = auto()
+    GT = auto()
+    LT = auto()
+    GTEQ = auto()
+    LTEQ = auto()
+    NEG = auto()
+
+    OR = auto()
+    AND = auto()
+    XOR = auto()
+    NOT = auto()
+    LSHIFT = auto()
+    RSHIFT = auto()
 
     JUMP = auto()
+    JUMP_ADDR = auto()
     JUMPZ = auto()
+    JUMPZ_ADDR = auto()
     JUMPNZ = auto()
+    JUMPNZ_ADDR = auto()
     CALL = auto()
+    CALL_ADDR = auto()
     RET = auto()
 
     SYSCALL_LINUX = auto()
     SYSCALL_WINDOWS = auto()
 
-    def to_bytes(self) -> bytes:
-        return bytes([cast(int, self.value)])
-
-assert len(OpCode) <= 256
+class DataType(Enum):
+    I8 = 0
+    UI8 = auto()
+    I16 = auto()
+    UI16 = auto()
+    I32 = auto()
+    UI32 = auto()
+    I64 = auto()
+    UI64 = auto()
+    F32 = auto()
+    F64 = auto()
 
 class Word:
     def __init__(self, bs: bytes) -> None:
         assert len(bs) == Word.SIZE()
         self.bytes = bs
 
-    def as_hex(self) -> str:
-        return "0x" + self.bytes.hex()
+    def as_hex(self, endianness: Literal['little', 'big'] = 'little') -> str:
+        return "0x" + (self.bytes.hex() if endianness == 'little' else self.bytes[::-1].hex())
 
     def as_i64(self) -> int:
-        return int.from_bytes(self.bytes, 'big', signed=True)
+        return int.from_bytes(self.bytes, 'little', signed=True)
 
     def as_ui64(self) -> int:
-        return int.from_bytes(self.bytes, 'big', signed=False)
+        return int.from_bytes(self.bytes, 'little', signed=False)
 
     @staticmethod
     def FromI64(value: int) -> 'Word':
-        return Word(value.to_bytes(Word.SIZE(), 'big', signed=True))
+        return Word(value.to_bytes(8, 'little', signed=True))
 
     @staticmethod
     def FromUI64(value: int) -> 'Word':
-        return Word(value.to_bytes(Word.SIZE(), 'big', signed=False))
+        return Word(value.to_bytes(8, 'little', signed=False))
 
     @staticmethod
     def SIZE() -> int:
         return 8
 
-class BinaryContext:
-    def __init__(self) -> None:
-        self.__functions : Dict[str, int] = {}
-        self.__ip = 0
-        self.__entry : Optional[str] = None
-
-    def add_function(self, name: str, size: int, is_entry: bool = False) -> None:
-        assert name not in self.__functions
-        self.__functions[name] = self.__ip
-        self.__ip += size
-
-        if is_entry:
-            self.__entry = name
-
-    def get_func_addr(self, name: str) -> Word:
-        assert name in self.__functions
-        return Word.FromUI64(self.__functions[name])
-
-    def get_entry(self) -> str:
-        assert self.__entry is not None
-        return self.__entry
-
-    def has_entry(self) -> bool:
-        return self.__entry is not None
-
 _TOperand = TypeVar("_TOperand")
 Operand = Any
+Label = str
 
 class Instruction:
-    def __init__(self, opcode: OpCode, operands: List[Operand], size: int) -> None:
+    def __init__(self, opcode: OpCode, operands: List[Operand]) -> None:
         self.__opcode = opcode
         self.__operands = operands
-        self.__size = size
 
     def get_opcode(self) -> OpCode:
         return self.__opcode
-
-    def get_size(self) -> int:
-        return self.__size
 
     def get_operands(self) -> List[Operand]:
         return self.__operands
@@ -118,30 +112,11 @@ class Instruction:
         assert type(self.__operands[idx]) == op_type
         return cast(op_type, self.__operands[idx]) # type: ignore
 
-    def to_binary(self, ctx: BinaryContext) -> bytes:
-        binary = bytearray(self.__opcode.to_bytes())
-
-        if self.__opcode == OpCode.NOOP:
-            pass
-        elif self.__opcode == OpCode.PUSH:
-            binary.extend(self.get_operand(0, Word).bytes)
-        elif self.__opcode == OpCode.POP:
-            pass
-        elif self.__opcode == OpCode.RET:
-            pass
-        elif self.__opcode == OpCode.SYSCALL_LINUX:
-            binary.extend(Word.FromUI64(self.get_operand(0, int)).bytes)
-            binary.extend(Word.FromUI64(self.get_operand(1, int)).bytes[:1])
-        else:
-            assert False, "Not implemented"
-
-        return bytes(binary)
-
     def to_xml(self) -> ET.Element:
         if self.__opcode == OpCode.NOOP:
             return ET.Element("NOOP")
-        elif self.__opcode == OpCode.PUSH:
-            return ET.Element("PUSH", {"value": self.get_operand(0, Word).as_hex()})
+        elif self.__opcode == OpCode.LOAD_CONST:
+            return ET.Element("LOAD_CONST", {"value": self.get_operand(0, Word).as_hex('big')})
         elif self.__opcode == OpCode.POP:
             return ET.Element("POP")
         elif self.__opcode == OpCode.RET:
@@ -156,9 +131,9 @@ class Instruction:
 
         if self.__opcode == OpCode.NOOP:
             string = "; NOOP\nXCHG RAX, RAX"
-        elif self.__opcode == OpCode.PUSH:
-            value_hex = self.get_operand(0, Word).as_hex()
-            string = f"; PUSH {value_hex}\nMOV RAX, {value_hex}\nPUSH RAX"
+        elif self.__opcode == OpCode.LOAD_CONST:
+            value_hex = self.get_operand(0, Word).as_hex('big')
+            string = f"; LOAD_CONST {value_hex}\nMOV RAX, {value_hex}\nPUSH RAX"
         elif self.__opcode == OpCode.POP:
             string = "; POP\nPOP RAX"
         elif self.__opcode == OpCode.RET:
@@ -181,64 +156,111 @@ class Instruction:
         return xml.dom.minidom.parseString(ET.tostring(self.to_xml(), 'unicode')).toprettyxml(indent='    ')
 
     @staticmethod
-    def FromBytes(bs: bytes) -> 'Instruction':
-        assert len(bs) > 0 and bs[0] < len(OpCode)
-        opcode = OpCode(bs[0])
-
-        if opcode == OpCode.NOOP:
-            return Instruction.Noop()
-        elif opcode == OpCode.PUSH:
-            value = Word(bs[1:Word.SIZE() + 1])
-            return Instruction.Push(value)
-        elif opcode == OpCode.POP:
-            return Instruction.Pop()
-        elif opcode == OpCode.RET:
-            return Instruction.Ret()
-        elif opcode == OpCode.SYSCALL_LINUX:
-            syscall_code = int.from_bytes(bs[1:Word.SIZE()], 'big', signed=False)
-            num_params = int.from_bytes(bs[1 + Word.SIZE():2 + Word.SIZE()], 'big', signed=False)
-            return Instruction.SyscallLinux(syscall_code, num_params)
-        
-        assert False, "Not implemented"
-
-    @staticmethod
     def Noop() -> 'Instruction':
-        return Instruction(OpCode.NOOP, [], 1)
+        return Instruction(OpCode.NOOP, [])
 
     @staticmethod
-    def Push(value: Word) -> 'Instruction':
-        return Instruction(OpCode.PUSH, [value], 9)
+    def LoadConst(value: Word) -> 'Instruction':
+        return Instruction(OpCode.LOAD_CONST, [value])
+
+    @staticmethod
+    def LoadLabel(label: Label) -> 'Instruction':
+        return Instruction(OpCode.LOAD_LABEL, [label])
+
+    @staticmethod
+    def LoadLocal(idx: int) -> 'Instruction':
+        return Instruction(OpCode.LOAD_LOCAL, [Word.FromUI64(idx)])
+
+    @staticmethod
+    def LoadParam(idx: int) -> 'Instruction':
+        return Instruction(OpCode.LOAD_PARAM, [Word.FromUI64(idx)])
+
+    @staticmethod
+    def LoadGlobal(name: str) -> 'Instruction':
+        return Instruction(OpCode.LOAD_GLOBAL, [name])
+
+    @staticmethod
+    def LoadMem(offset: int) -> 'Instruction':
+        return Instruction(OpCode.LOAD_MEM, [Word.FromI64(offset)])
+
+    @staticmethod
+    def StoreLocal(idx: int) -> 'Instruction':
+        return Instruction(OpCode.STORE_LOCAL, [Word.FromUI64(idx)])
+
+    @staticmethod
+    def StoreParam(idx: int) -> 'Instruction':
+        return Instruction(OpCode.STORE_PARAM, [Word.FromUI64(idx)])
+
+    @staticmethod
+    def StoreGlobal(name: str) -> 'Instruction':
+        return Instruction(OpCode.STORE_GLOBAL, [name])
+
+    @staticmethod
+    def StoreMem(offset: int) -> 'Instruction':
+        return Instruction(OpCode.STORE_MEM, [Word.FromI64(offset)])
+
+    @staticmethod
+    def Jump(label: Label) -> 'Instruction':
+        return Instruction(OpCode.JUMP, [label])
+
+    @staticmethod
+    def JumpZ(label: Label) -> 'Instruction':
+        return Instruction(OpCode.JUMPZ, [label])
+
+    @staticmethod
+    def JumpNZ(label: Label) -> 'Instruction':
+        return Instruction(OpCode.JUMPNZ, [label])
+
+    @staticmethod
+    def JumpAddr() -> 'Instruction':
+        return Instruction(OpCode.JUMP_ADDR, [])
+
+    @staticmethod
+    def JumpZAddr() -> 'Instruction':
+        return Instruction(OpCode.JUMPZ_ADDR, [])
+
+    @staticmethod
+    def JumpNZAddr() -> 'Instruction':
+        return Instruction(OpCode.JUMPNZ_ADDR, [])
+
+    @staticmethod
+    def Call(label: Label) -> 'Instruction':
+        return Instruction(OpCode.CALL, [label])
+
+    @staticmethod
+    def CallAddr() -> 'Instruction':
+        return Instruction(OpCode.CALL_ADDR, [])
 
     @staticmethod
     def Pop() -> 'Instruction':
-        return Instruction(OpCode.POP, [], 1)
+        return Instruction(OpCode.POP, [])
 
     @staticmethod
     def Ret() -> 'Instruction':
-        return Instruction(OpCode.RET, [], 1)
+        return Instruction(OpCode.RET, [])
 
     @staticmethod
     def SyscallLinux(code: int, num_params: int) -> 'Instruction':
         assert num_params <= 6
-        return Instruction(OpCode.SYSCALL_LINUX, [code, num_params], 10)
+        return Instruction(OpCode.SYSCALL_LINUX, [code, num_params])
 
 class Function:
     def __init__(self, name: str, num_params: int, num_locals: int) -> None:
         self.__name = name
         self.__num_params = num_params
         self.__num_locals = num_locals
-        self.__size = 0
         self.__instructions : List[Instruction] = []
+        self.__labels : Dict[Label, int] = {}
 
     def insert_instr(self, instr: Instruction) -> None:
         self.__instructions.append(instr)
-        self.__size += instr.get_size()
+
+    def insert_label(self, label: Label) -> None:
+        assert label not in self.__labels
+        self.__labels[label] = len(self.__instructions)
 
     def get_name(self) -> str:
         return self.__name
-
-    def get_size(self) -> int:
-        return self.__size
 
     def get_num_params(self) -> int:
         return self.__num_params
@@ -246,28 +268,50 @@ class Function:
     def get_num_locals(self) -> int:
         return self.__num_locals
 
+    def __get_inv_labels(self) -> Dict[int, List[Label]]:
+        result : Dict[int, List[Label]] = {}
+
+        for label, offset in self.__labels.items():
+            if offset in result:
+                result[offset].append(label)
+            else:
+                result[offset] = [label]
+
+        return result
+
+    def __get_code(self) -> List[Union[Instruction, Label]]:
+        code : List[Union[Instruction, Label]] = []
+        inv_labels = self.__get_inv_labels()
+
+        for idx, instr in enumerate(self.__instructions):
+            if idx in inv_labels:
+                code.extend(inv_labels[idx])
+
+            code.append(instr)
+
+        return code
+
     def to_xml(self) -> ET.Element:
         element = ET.Element("function", {"name": self.__name, "params": str(self.__num_params), "locals": str(self.__num_locals)})
 
-        for instr in self.__instructions:
-            element.append(instr.to_xml())
+        for elem in self.__get_code():
+            if isinstance(elem, Instruction):
+                element.append(elem.to_xml())
+            else:
+                element.append(ET.Element("LABEL", {"name": elem}))
 
         return element
     
-    def to_binary(self, ctx: BinaryContext) -> bytes:
-        binary = bytearray()
-
-        for instr in self.__instructions:
-            binary.extend(instr.to_binary(ctx))
-
-        return bytes(binary)
-
     def to_nasm(self) -> str:
         string = f"FUNC_{self.__name}:"
+        inv_labels = self.__get_inv_labels()
 
-        for instr in self.__instructions:
-            nasm = instr.to_nasm().replace('\n', '\n    ')
-            string += f"\n    {nasm}"
+        for elem in self.__get_code():
+            if isinstance(elem, Instruction):
+                nasm = elem.to_nasm().replace('\n', '\n    ')
+                string += f"\n    {nasm}"
+            else:
+                string += f"\n  .{elem}:"
 
         return string
 
@@ -276,35 +320,35 @@ class Function:
 
 class Program:
     def __init__(self) -> None:
-        self.__functions : List[Function] = []
-        self.__binary_ctx = BinaryContext()
+        self.__functions : Dict[str, Function] = {}
+        self.__entry : Optional[str] = None
 
     def add_function(self, function: Function, is_entry: bool = False) -> None:
-        self.__binary_ctx.add_function(function.get_name(), function.get_size(), is_entry)
-        self.__functions.append(function)
+        assert function.get_name() not in self.__functions
+        self.__functions[function.get_name()] = function
 
-    def to_binary(self) -> bytes:
-        binary = bytearray()
-        
-        for function in self.__functions:
-            binary.extend(function.to_binary(self.__binary_ctx))
-
-        return bytes(binary)
+    def set_entry(self, func_name: str) -> None:
+        assert self.__entry is None and func_name in self.__functions
+        self.__entry = func_name
 
     def to_xml(self) -> ET.Element:
-        document = ET.Element("program", {"slasm_version": _VERSION})
-        code = ET.SubElement(document, "code", {"entry":self.__binary_ctx.get_entry()})
+        assert self.__entry is not None
 
-        for function in self.__functions:
+        document = ET.Element("program", {"slasm_version": _VERSION})
+        code = ET.SubElement(document, "code", {"entry":self.__entry})
+
+        for function in self.__functions.values():
             code.append(function.to_xml())
 
         return document
 
     def to_nasm(self) -> str:
+        assert self.__entry is not None
+
         string = "    global _main\n\n    section .text"
 
-        for function in self.__functions:
-            if function.get_name() == self.__binary_ctx.get_entry():
+        for function in self.__functions.values():
+            if function.get_name() == self.__entry:
                 string += f"\n_main:"
 
             string += f"\n{function.to_nasm()}"
