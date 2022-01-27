@@ -5,6 +5,7 @@
             <LOAD_CONST value="0x000000000000007b"/>
             <LABEL name="Label1"/>
             <LABEL name="Label2"/>
+            <LOAD_LABEL label="Label1"/>
             <SYSCALL_LINUX code="33554433" num_params="1"/>
             <LABEL name="LabelRet"/>
             <RET/>

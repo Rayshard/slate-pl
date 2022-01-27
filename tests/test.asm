@@ -8,8 +8,11 @@ FUNC_Main:
     PUSH RAX
   .Label1:
   .Label2:
+    ; LOAD_LABEL Label1
+    LEA RAX, [REL .Label1]
+    PUSH RAX
     ; SYSCALL_LINUX 33554433, 1
-    MOV RAX, 33554433
+    MOV RAX, 0x0000000002000001
     POP RDI
     SYSCALL
   .LabelRet:
