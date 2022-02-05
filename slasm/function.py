@@ -4,10 +4,11 @@ from slasm.instruction import Instruction, Label
 
 
 class Function:
-    def __init__(self, name: str, num_params: int, num_locals: int) -> None:
+    def __init__(self, name: str, num_params: int, num_locals: int, returns_value: bool) -> None:
         self.__name = name
         self.__num_params = num_params
         self.__num_locals = num_locals
+        self.__returns_value = returns_value
         self.__code : List[Union[Instruction, Label]] = []
         self.__labels : Set[Label] = set()
 
@@ -25,6 +26,10 @@ class Function:
 
     @property
     def num_locals(self) -> int:
+        return self.__num_locals
+
+    @property
+    def returns_value(self) -> int:
         return self.__num_locals
 
     def insert_instr(self, instr: Instruction) -> None:

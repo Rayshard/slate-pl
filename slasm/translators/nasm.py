@@ -15,7 +15,7 @@ def __translate_InstrLoadConst(instr: Instruction) -> str:
            f"MOV RAX, {value_hex}\n" \
             "PUSH RAX"
 
-def __translate_InstrInlineNativeAsm(instr: Instruction) -> str:
+def __translate_InstrInlineNasm(instr: Instruction) -> str:
     return f"; NATIVE ASSEMBLY\n{instr.get_operand(0, str)}"
 
 def __translate_InstrRet(instr: Instruction) -> str:
@@ -296,7 +296,7 @@ def __translate_InstrMod(instr: Instruction) -> str:
 __TRANSLATORS : Dict[Any, Callable[..., str]] = {
     OpCode.NOOP: __translate_InstrNoop,
     OpCode.LOAD_CONST: __translate_InstrLoadConst,
-    OpCode.INLINE_NATIVE_ASM: __translate_InstrInlineNativeAsm,
+    OpCode.INLINE_NASM: __translate_InstrInlineNasm,
     OpCode.RET: __translate_InstrRet,
     OpCode.LOAD_LABEL: __translate_InstrLoadLabel,
     OpCode.LOAD_LOCAL: __translate_InstrLoadLocal,

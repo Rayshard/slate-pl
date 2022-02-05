@@ -12,8 +12,8 @@ def __translate_InstrNoop(instr: Instruction) -> ET.Element:
 def __translate_InstrLoadConst(instr: Instruction) -> ET.Element:
     return ET.Element("LOAD_CONST", {"value": instr.get_operand(0, Word).as_hex()})
 
-def __translate_InstrInlineNativeAsm(instr: Instruction) -> ET.Element:
-    return ET.Element("INLINE_NATIVE_ASM", {"asm": instr.get_operand(0, str)})
+def __translate_InstrInlineNasm(instr: Instruction) -> ET.Element:
+    return ET.Element("INLINE_NASM", {"asm": instr.get_operand(0, str)})
 
 def __translate_InstrRet(instr: Instruction) -> ET.Element:
     return ET.Element("RET")
@@ -66,7 +66,7 @@ def __translate_InstrMod(instr: Instruction) -> ET.Element:
 __TRANSLATORS : Dict[Any, Callable[..., ET.Element]] = {
     OpCode.NOOP: __translate_InstrNoop,
     OpCode.LOAD_CONST: __translate_InstrLoadConst,
-    OpCode.INLINE_NATIVE_ASM: __translate_InstrInlineNativeAsm,
+    OpCode.INLINE_NASM: __translate_InstrInlineNasm,
     OpCode.RET: __translate_InstrRet,
     OpCode.LOAD_LABEL: __translate_InstrLoadLabel,
     OpCode.LOAD_LOCAL: __translate_InstrLoadLocal,

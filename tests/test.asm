@@ -1,5 +1,5 @@
 ; SLASM_VERSION 1.0
-; TARGET x86-64-linux
+; TARGET x86-64-linux-nasm
 
 %macro LINUX_x86_64_SYSCALL1 1
     MOV RAX, %1

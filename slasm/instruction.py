@@ -2,6 +2,7 @@ from enum import Enum, auto
 from typing import Any, List, Type, TypeVar, cast
 
 from slasm.slasm import DataType, Word
+from llvmlite import ir # type: ignore
 
 
 class OpCode(Enum):
@@ -53,7 +54,8 @@ class OpCode(Enum):
     SCALL = auto()
     RET = auto()
 
-    INLINE_NATIVE_ASM = auto()
+    INLINE_NASM = auto()
+    INLINE_LLVM = auto()
 
 _TOperand = TypeVar("_TOperand")
 Operand = Any
@@ -74,7 +76,7 @@ class Instruction:
 
     def get_operand(self, idx: int, op_type: Type[_TOperand]) -> _TOperand:
         assert idx < len(self.__operands)
-        assert type(self.__operands[idx]) == op_type
+        assert isinstance(self.__operands[idx], op_type)
         return cast(op_type, self.__operands[idx]) # type: ignore
 
 def Noop() -> 'Instruction':
@@ -200,5 +202,8 @@ def Pop() -> 'Instruction':
 def Ret() -> 'Instruction':
     return Instruction(OpCode.RET, [])
 
-def InlineNativeAsm(asm: str) -> 'Instruction':
-    return Instruction(OpCode.INLINE_NATIVE_ASM, [asm])
+def InlineNasm(asm: str) -> 'Instruction':
+    return Instruction(OpCode.INLINE_NASM, [asm])
+
+def InlineLLVM(asm: ir.Value) -> 'Instruction':
+    return Instruction(OpCode.INLINE_LLVM, [asm])

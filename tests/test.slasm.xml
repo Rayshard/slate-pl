@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
-<program slasm_version="1.0" target="x86-64-linux">
+<program slasm_version="1.0" target="x86-64-linux-nasm">
     <code entry="Main">
         <function name="Main" params="0" locals="0">
             <LOAD_CONST value="0x000000000000007b"/>
-            <INLINE_NATIVE_ASM asm="LINUX_x86_64_SYSCALL1 0x2000001"/>
+            <INLINE_NASM asm="LINUX_x86_64_SYSCALL1 0x2000001"/>
             <RET/>
         </function>
     </code>

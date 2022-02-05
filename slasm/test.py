@@ -15,10 +15,10 @@ from slasm import instruction
 # string += "\nSYSCALL"
 
 def main():
-    program = Program(target="x86-64-linux")
-    function = Function("Main", 0, 0)
+    program = Program(target="x86-64-linux-nasm")
+    function = Function("Main", 0, 0, False)
     function.insert_instr(instruction.LoadConst(Word.FromUI64(123)))
-    function.insert_instr(instruction.InlineNativeAsm("LINUX_x86_64_SYSCALL1 0x2000001"))
+    function.insert_instr(instruction.InlineNasm("LINUX_x86_64_SYSCALL1 0x2000001"))
     function.insert_instr(instruction.Ret())
 
     program.add_function(function)
