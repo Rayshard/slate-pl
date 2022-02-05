@@ -1,3 +1,12 @@
+; SLASM_VERSION 1.0
+; TARGET x86-64-linux
+
+%macro LINUX_x86_64_SYSCALL1 1
+    MOV RAX, %1
+    POP RDI
+    SYSCALL
+%endmacro
+
     global _main
 
     section .text
@@ -6,15 +15,7 @@ FUNC_Main:
     ; LOAD_CONST 0x000000000000007b
     MOV RAX, 0x000000000000007b
     PUSH RAX
-  .Label1:
-  .Label2:
-    ; LOAD_LABEL Label1
-    LEA RAX, [REL .Label1]
-    PUSH RAX
-    ; SYSCALL_LINUX 33554433, 1
-    MOV RAX, 0x0000000002000001
-    POP RDI
-    SYSCALL
-  .LabelRet:
+    ; NATIVE ASSEMBLY
+    LINUX_x86_64_SYSCALL1 0x2000001
     ; RET
     RET

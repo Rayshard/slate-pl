@@ -1,13 +1,9 @@
 <?xml version="1.0" ?>
-<program slasm_version="1.0">
+<program slasm_version="1.0" target="x86-64-linux">
     <code entry="Main">
         <function name="Main" params="0" locals="0">
             <LOAD_CONST value="0x000000000000007b"/>
-            <LABEL name="Label1"/>
-            <LABEL name="Label2"/>
-            <LOAD_LABEL label="Label1"/>
-            <SYSCALL_LINUX code="33554433" num_params="1"/>
-            <LABEL name="LabelRet"/>
+            <INLINE_NATIVE_ASM asm="LINUX_x86_64_SYSCALL1 0x2000001"/>
             <RET/>
         </function>
     </code>
