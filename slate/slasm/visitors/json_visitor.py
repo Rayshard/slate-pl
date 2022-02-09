@@ -50,5 +50,17 @@ def emit_Program(program: Program) -> Any:
         }
     }
 
+def load_Program(json_value: Any) -> Program:
+    assert isinstance(json_value, dict)
+
+    program = Program(json_value["target"])
+
+    for item in program["code"]["functions"].values():
+        pass
+
+    program.entry = json_value["code"]["entry"]
+
+    return program
+
 def to_string(json_value: Any) -> str:
     return json.dumps(json_value, indent=4)
