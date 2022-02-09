@@ -1,13 +1,11 @@
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from slate.slasm.instruction import Instruction, OpCode
 
 class BasicBlock:
     __TERMINATING_INSTRUCTIONS = set([
         OpCode.JUMP,
-        OpCode.INDIRECT_JUMP,
         OpCode.COND_JUMP,
-        OpCode.INDIRECT_COND_JUMP,
         OpCode.CALL,
         OpCode.INDIRECT_CALL,
         OpCode.RET

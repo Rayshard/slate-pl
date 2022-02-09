@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional
 from slate.slasm.function import Function
-from slate.slasm.instruction import Instruction, OpCode
+from slate.slasm.instruction import LOAD_CONST, NATIVE_CALL, RET, Instruction, OpCode
 from slate.slasm.program import Program
 from slate.slasm.slasm import Word
 
@@ -53,90 +53,25 @@ class GlobalContext:
 
         return llvm_global 
 
-def __translate_InstrNoop(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
+def __translate_LOAD_CONST(instr: LOAD_CONST, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+    func_ctx.push_value_onto_stack(ir.Constant(LLVMTypeWord, instr.value.as_ui64()))
 
-def __translate_InstrLoadConst(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    func_ctx.push_value_onto_stack(ir.Constant(LLVMTypeWord, instr.get_operand(0, Word).as_ui64()))
-
-def __translate_InstrLoadLabel(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrLoadLocal(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrLoadParam(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrLoadGlobal(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrLoadMem(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
+def __translate_NATIVE_CALL(instr: NATIVE_CALL, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+    call_value = llvm_builder.call(global_ctx.get_function(instr.target), [func_ctx.pop_value_from_stack() for _ in range(instr.num_params)])
     
-def __translate_InstrStoreLocal(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrStoreParam(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrStoreGlobal(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrStoreMem(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrPop(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrAdd(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrSub(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrMul(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrDiv(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrMod(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    assert False, "Not implemented"
-
-def __translate_InstrNativeCall(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
-    target, num_params, returns_value = instr.get_operand(0, str), instr.get_operand(1, int), instr.get_operand(2, bool)
-    call_value = llvm_builder.call(global_ctx.get_function(target), [func_ctx.pop_value_from_stack() for _ in range(num_params)])
-    
-    if returns_value:
+    if instr.returns_value:
         func_ctx.push_value_onto_stack(call_value)
 
-def __translate_InstrRet(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+def __translate_RET(instr: RET, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
     if func_ctx.returns_value:
         llvm_builder.ret(func_ctx.pop_value_from_stack())
     else:
         llvm_builder.ret_void()
 
-__TRANSLATORS : Dict[Any, Callable[[Instruction, ir.IRBuilder, FunctionContext, GlobalContext], None]] = {
-    OpCode.NOOP: __translate_InstrNoop,
-    OpCode.LOAD_CONST: __translate_InstrLoadConst,
-    OpCode.LOAD_LABEL: __translate_InstrLoadLabel,
-    OpCode.LOAD_LOCAL: __translate_InstrLoadLocal,
-    OpCode.LOAD_PARAM: __translate_InstrLoadParam,
-    OpCode.LOAD_GLOBAL: __translate_InstrLoadGlobal,
-    OpCode.LOAD_MEM: __translate_InstrLoadMem,
-    OpCode.STORE_LOCAL: __translate_InstrStoreLocal,
-    OpCode.STORE_PARAM: __translate_InstrStoreParam,
-    OpCode.STORE_GLOBAL: __translate_InstrStoreGlobal,
-    OpCode.STORE_MEM: __translate_InstrStoreMem,
-    OpCode.POP: __translate_InstrPop,
-    OpCode.ADD: __translate_InstrAdd,
-    OpCode.SUB: __translate_InstrSub,
-    OpCode.MUL: __translate_InstrMul,
-    OpCode.DIV: __translate_InstrDiv,
-    OpCode.MOD: __translate_InstrMod,
-    OpCode.NATIVE_CALL: __translate_InstrNativeCall,
-    OpCode.RET: __translate_InstrRet,
+__TRANSLATORS : Dict[Any, Callable[..., None]] = {
+    OpCode.LOAD_CONST: __translate_LOAD_CONST,
+    OpCode.NATIVE_CALL: __translate_NATIVE_CALL,
+    OpCode.RET: __translate_RET,
 }
 
 def translate_Instruction(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:

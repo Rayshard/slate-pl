@@ -2,6 +2,7 @@
 Slate Programming Language
 
 ### Future Slate Features
+- triple inequalities like Python: ```y <= x < z```
 - Function Overloading
 - Enums
 - Bignums (Arbitrary length integers)

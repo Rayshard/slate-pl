@@ -12,7 +12,7 @@ exclude = ["TODO"]
 
 [tool.poetry.scripts]
 slate = 'slate.main:cli'
-slasm = 'slate.slasm.test:main'
+slasm = 'slate.slasm.main:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10"

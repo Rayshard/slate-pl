@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict
 from slate.slasm.function import Function
-from slate.slasm.instruction import Instruction, OpCode
+from slate.slasm.instruction import ADD, DIV, LOAD_CONST, LOAD_FUNC_ADDR, LOAD_GLOBAL, LOAD_LOCAL, LOAD_MEM, LOAD_PARAM, MOD, MUL, NATIVE_CALL, NOOP, POP, RET, STORE_GLOBAL, STORE_LOCAL, STORE_MEM, STORE_PARAM, SUB, Instruction, OpCode
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION, DataType, Word
 
@@ -12,82 +12,66 @@ class FunctionContext:
     def returns_value(self) -> bool:
         return self.__returns_value
 
-def __translate_InstrNoop(instr: Instruction, ctx: FunctionContext) -> str:
+def __translate_NOOP(instr: NOOP, ctx: FunctionContext) -> str:
     return "; NOOP\n" \
            "xchg rax, rax"
 
-def __translate_InstrLoadConst(instr: Instruction, ctx: FunctionContext) -> str:
-    value_hex = instr.get_operand(0, Word).as_hex()
+def __translate_LOAD_CONST(instr: LOAD_CONST, ctx: FunctionContext) -> str:
+    value_hex = instr.value.as_hex()
     
     return f"; LOAD_CONST {value_hex}\n" \
            f"mov rax, {value_hex}\n" \
             "push rax"
 
-def __translate_InstrLoadLabel(instr: Instruction, ctx: FunctionContext) -> str:
-    label = instr.get_operand(0, str)
-    
-    return f"; LOAD_LABEL {label}\n" \
-           f"lea rax, [rel .{label}]\n" \
+def __translate_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, ctx: FunctionContext) -> str:
+    return f"; LOAD_FUNC_ADDR {instr.name}\n" \
+           f"lea rax, [rel .{instr.name}]\n" \
             "push rax"
 
-def __translate_InstrLoadLocal(instr: Instruction, ctx: FunctionContext) -> str:
-    idx = instr.get_operand(0, Word).as_ui64()
-    
-    return f"; LOAD_LOCAL {idx}\n" \
-           f"push qword [rbp-{(idx + 1) * Word.SIZE()}]"
+def __translate_LOAD_LOCAL(instr: LOAD_LOCAL, ctx: FunctionContext) -> str:
+    return f"; LOAD_LOCAL {instr.idx}\n" \
+           f"push qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
 
-def __translate_InstrLoadParam(instr: Instruction, ctx: FunctionContext) -> str:
-    idx = instr.get_operand(0, Word).as_ui64()
-    
-    return f"; LOAD_PARAM {idx}\n" \
-           f"push qword [rbp+{(idx + 2) * Word.SIZE()}]"
+def __translate_LOAD_PARAM(instr: LOAD_PARAM, ctx: FunctionContext) -> str:
+    return f"; LOAD_PARAM {instr.idx}\n" \
+           f"push qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
 
-def __translate_InstrLoadGlobal(instr: Instruction, ctx: FunctionContext) -> str:
-    name = instr.get_operand(0, str)
-    
-    return f"; LOAD_GLOBAL {name}\n" \
-           f"push qword [rel {name}]"
+def __translate_LOAD_GLOBAL(instr: LOAD_GLOBAL, ctx: FunctionContext) -> str:
+    return f"; LOAD_GLOBAL {instr.name}\n" \
+           f"push qword [rel {instr.name}]"
 
-def __translate_InstrLoadMem(instr: Instruction, ctx: FunctionContext) -> str:
-    offset = instr.get_operand(0, Word).as_i64()
-    sign = "-" if offset < 0 else "+"
+def __translate_LOAD_MEM(instr: LOAD_MEM, ctx: FunctionContext) -> str:
+    sign = "-" if instr.offset < 0 else "+"
     
-    return f"; LOAD_MEM {offset}\n" \
+    return f"; LOAD_MEM {instr.offset}\n" \
             "pop rax\n" \
-           f"push qword [rax{sign}{offset}]"
+           f"push qword [rax{sign}{abs(instr.offset)}]"
     
-def __translate_InstrStoreLocal(instr: Instruction, ctx: FunctionContext) -> str:
-    idx = instr.get_operand(0, Word).as_ui64()
-    
-    return f"; STORE_LOCAL {idx}\n" \
-           f"pop qword [rbp-{(idx + 1) * Word.SIZE()}]"
+def __translate_STORE_LOCAL(instr: STORE_LOCAL, ctx: FunctionContext) -> str:
+    return f"; STORE_LOCAL {instr.idx}\n" \
+           f"pop qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
 
-def __translate_InstrStoreParam(instr: Instruction, ctx: FunctionContext) -> str:
-    idx = instr.get_operand(0, Word).as_ui64()
-    
-    return f"; STORE_PARAM {idx}\n" \
-           f"pop qword [rbp+{(idx + 2) * Word.SIZE()}]"
+def __translate_STORE_PARAM(instr: STORE_PARAM, ctx: FunctionContext) -> str:
+    return f"; STORE_PARAM {instr.idx}\n" \
+           f"pop qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
 
-def __translate_InstrStoreGlobal(instr: Instruction, ctx: FunctionContext) -> str:
-    name = instr.get_operand(0, str)
-    
-    return f"; STORE_GLOBAL {name}\n" \
-           f"pop qword [rel {name}]"
+def __translate_STORE_GLOBAL(instr: STORE_GLOBAL, ctx: FunctionContext) -> str:
+    return f"; STORE_GLOBAL {instr.name}\n" \
+           f"pop qword [rel {instr.name}]"
 
-def __translate_InstrStoreMem(instr: Instruction, ctx: FunctionContext) -> str:
-    offset = instr.get_operand(0, Word).as_i64()
-    sign = "-" if offset < 0 else "+"
+def __translate_STORE_MEM(instr: STORE_MEM, ctx: FunctionContext) -> str:
+    sign = "-" if instr.offset < 0 else "+"
     
-    return f"; STORE_MEM {offset}\n" \
+    return f"; STORE_MEM {instr.offset}\n" \
             "pop rax\n" \
-           f"pop qword [rax{sign}{offset}]"
+           f"pop qword [rax{sign}{abs(instr.offset)}]"
 
-def __translate_InstrPop(instr: Instruction, ctx: FunctionContext) -> str:
+def __translate_POP(instr: POP, ctx: FunctionContext) -> str:
     return  "; POP\n" \
            f"add rsp, {Word.SIZE()}"
 
-def __translate_InstrAdd(instr: Instruction, ctx: FunctionContext) -> str:
-    dt = instr.get_operand(0, DataType)
+def __translate_ADD(instr: ADD, ctx: FunctionContext) -> str:
+    dt = instr.data_type
     string = f"; ADD {dt.name}\n" \
               "pop rax\n" \
               "pop rbx\n"
@@ -116,8 +100,8 @@ def __translate_InstrAdd(instr: Instruction, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_InstrSub(instr: Instruction, ctx: FunctionContext) -> str:
-    dt = instr.get_operand(0, DataType)
+def __translate_SUB(instr: SUB, ctx: FunctionContext) -> str:
+    dt = instr.data_type
     string = f"; SUB {dt.name}\n" \
               "pop rax\n" \
               "pop rbx\n"
@@ -146,8 +130,8 @@ def __translate_InstrSub(instr: Instruction, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_InstrMul(instr: Instruction, ctx: FunctionContext) -> str:
-    dt = instr.get_operand(0, DataType)
+def __translate_MUL(instr: MUL, ctx: FunctionContext) -> str:
+    dt = instr.data_type
     string = f"; MUL {dt.name}\n" \
               "pop rax\n" \
               "pop rbx\n"
@@ -176,8 +160,8 @@ def __translate_InstrMul(instr: Instruction, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_InstrDiv(instr: Instruction, ctx: FunctionContext) -> str:
-    dt = instr.get_operand(0, DataType)
+def __translate_DIV(instr: DIV, ctx: FunctionContext) -> str:
+    dt = instr.data_type
     string = f"; DIV {dt.name}\n" \
               "pop rax\n" \
               "pop rbx\n"
@@ -226,8 +210,8 @@ def __translate_InstrDiv(instr: Instruction, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_InstrMod(instr: Instruction, ctx: FunctionContext) -> str:
-    dt = instr.get_operand(0, DataType)
+def __translate_MOD(instr: MOD, ctx: FunctionContext) -> str:
+    dt = instr.data_type
     string = f"; MOD {dt.name}\n" \
               "pop rax\n" \
               "pop rbx\n"
@@ -294,20 +278,19 @@ def __translate_InstrMod(instr: Instruction, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_InstrNativeCall(instr: Instruction, ctx: FunctionContext) -> str:
-    target, num_params, returns_value = instr.get_operand(0, str), instr.get_operand(1, int), instr.get_operand(2, bool)
+def __translate_NATIVE_CALL(instr: NATIVE_CALL, ctx: FunctionContext) -> str:
     string = f"; NATIVE CALL\n" \
-             f"call {target}\n"
+             f"call {instr.target}\n"
 
-    if num_params != 0:
-        string += f"add rsp, {num_params * Word.SIZE()} ; remove arguments from stack"
+    if instr.num_params != 0:
+        string += f"add rsp, {instr.num_params * Word.SIZE()} ; remove arguments from stack"
         
-    if returns_value:
+    if instr.returns_value:
         string += "push rax ; push return value"
     
     return string
 
-def __translate_InstrRet(instr: Instruction, ctx: FunctionContext) -> str:
+def __translate_RET(instr: RET, ctx: FunctionContext) -> str:
     string = "; RET\n"
 
     if ctx.returns_value:
@@ -316,26 +299,26 @@ def __translate_InstrRet(instr: Instruction, ctx: FunctionContext) -> str:
     string += "ret"
     return string
 
-__INSTRUCTION_TRANSLATORS : Dict[OpCode, Callable[[Instruction, FunctionContext], str]] = {
-    OpCode.NOOP: __translate_InstrNoop,
-    OpCode.LOAD_CONST: __translate_InstrLoadConst,
-    OpCode.LOAD_LABEL: __translate_InstrLoadLabel,
-    OpCode.LOAD_LOCAL: __translate_InstrLoadLocal,
-    OpCode.LOAD_PARAM: __translate_InstrLoadParam,
-    OpCode.LOAD_GLOBAL: __translate_InstrLoadGlobal,
-    OpCode.LOAD_MEM: __translate_InstrLoadMem,
-    OpCode.STORE_LOCAL: __translate_InstrStoreLocal,
-    OpCode.STORE_PARAM: __translate_InstrStoreParam,
-    OpCode.STORE_GLOBAL: __translate_InstrStoreGlobal,
-    OpCode.STORE_MEM: __translate_InstrStoreMem,
-    OpCode.POP: __translate_InstrPop,
-    OpCode.ADD: __translate_InstrAdd,
-    OpCode.SUB: __translate_InstrSub,
-    OpCode.MUL: __translate_InstrMul,
-    OpCode.DIV: __translate_InstrDiv,
-    OpCode.MOD: __translate_InstrMod,
-    OpCode.NATIVE_CALL: __translate_InstrNativeCall,
-    OpCode.RET: __translate_InstrRet,
+__INSTRUCTION_TRANSLATORS : Dict[OpCode, Callable[..., str]] = {
+    OpCode.NOOP: __translate_NOOP,
+    OpCode.LOAD_CONST: __translate_LOAD_CONST,
+    OpCode.LOAD_LOCAL: __translate_LOAD_LOCAL,
+    OpCode.LOAD_PARAM: __translate_LOAD_PARAM,
+    OpCode.LOAD_GLOBAL: __translate_LOAD_GLOBAL,
+    OpCode.LOAD_MEM: __translate_LOAD_MEM,
+    OpCode.LOAD_FUNC_ADDR: __translate_LOAD_FUNC_ADDR,
+    OpCode.STORE_LOCAL: __translate_STORE_LOCAL,
+    OpCode.STORE_PARAM: __translate_STORE_PARAM,
+    OpCode.STORE_GLOBAL: __translate_STORE_GLOBAL,
+    OpCode.STORE_MEM: __translate_STORE_MEM,
+    OpCode.POP: __translate_POP,
+    OpCode.ADD: __translate_ADD,
+    OpCode.SUB: __translate_SUB,
+    OpCode.MUL: __translate_MUL,
+    OpCode.DIV: __translate_DIV,
+    OpCode.MOD: __translate_MOD,
+    OpCode.NATIVE_CALL: __translate_NATIVE_CALL,
+    OpCode.RET: __translate_RET,
 }
 
 def translate_Instruction(instr: Instruction, ctx: FunctionContext) -> str:

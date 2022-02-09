@@ -1,19 +1,21 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, List, Type, TypeVar, cast
+from typing import Literal, Union
 
 from slate.slasm.slasm import DataType, Word
+from slate.utilities import i64, ui64, uint
 
 
 class OpCode(Enum):
     NOOP = 0
 
     LOAD_CONST = auto()
-    LOAD_LABEL = auto()
     LOAD_LOCAL = auto()
     LOAD_PARAM = auto()
     LOAD_GLOBAL = auto()
     LOAD_MEM = auto()
+    LOAD_FUNC_ADDR = auto()
 
     POP = auto()
     STORE_LOCAL = auto()
@@ -45,154 +47,356 @@ class OpCode(Enum):
     CONVERT = auto()
 
     JUMP = auto()
-    INDIRECT_JUMP = auto()
     COND_JUMP = auto()
-    INDIRECT_COND_JUMP = auto()
     CALL = auto()
     INDIRECT_CALL = auto()
     NATIVE_CALL = auto()
     RET = auto()
 
-_TOperand = TypeVar("_TOperand")
-Operand = Any
+class _Instruction(ABC):
+    @property
+    @abstractmethod
+    def opcode(self) -> OpCode:
+        pass
 
-class Instruction:
-    def __init__(self, opcode: OpCode, operands: List[Operand]) -> None:
-        self.__opcode = opcode
-        self.__operands = operands
+@dataclass(frozen=True)
+class NOOP(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.NOOP
+
+@dataclass(frozen=True)
+class LOAD_CONST(_Instruction):
+    value : Word
 
     @property
     def opcode(self) -> OpCode:
-        return self.__opcode
+        return OpCode.LOAD_CONST
+
+@dataclass(frozen=True)
+class LOAD_FUNC_ADDR(_Instruction):
+    name : str
 
     @property
-    def operands(self) -> List[Operand]:
-        return self.__operands
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_FUNC_ADDR
 
-    def get_operand(self, idx: int, op_type: Type[_TOperand]) -> _TOperand:
-        assert idx < len(self.__operands)
-        assert isinstance(self.__operands[idx], op_type)
-        return cast(op_type, self.__operands[idx]) # type: ignore
+@dataclass(frozen=True)
+class LOAD_LOCAL(_Instruction):
+    idx : ui64
 
-def Noop() -> 'Instruction':
-    return Instruction(OpCode.NOOP, [])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_LOCAL
 
-def LoadConst(value: Word) -> 'Instruction':
-    return Instruction(OpCode.LOAD_CONST, [value])
+@dataclass(frozen=True)
+class LOAD_PARAM(_Instruction):
+    idx : ui64
 
-def LoadLabel(label: str) -> 'Instruction':
-    return Instruction(OpCode.LOAD_LABEL, [label])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_PARAM
 
-def LoadLocal(idx: int) -> 'Instruction':
-    return Instruction(OpCode.LOAD_LOCAL, [Word.FromUI64(idx)])
+@dataclass(frozen=True)
+class LOAD_GLOBAL(_Instruction):
+    name : str
 
-def LoadParam(idx: int) -> 'Instruction':
-    return Instruction(OpCode.LOAD_PARAM, [Word.FromUI64(idx)])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_GLOBAL
 
-def LoadGlobal(name: str) -> 'Instruction':
-    return Instruction(OpCode.LOAD_GLOBAL, [name])
+@dataclass(frozen=True)
+class LOAD_MEM(_Instruction):
+    offset : i64
 
-def LoadMem(offset: int) -> 'Instruction':
-    return Instruction(OpCode.LOAD_MEM, [Word.FromI64(offset)])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_MEM
 
-def StoreLocal(idx: int) -> 'Instruction':
-    return Instruction(OpCode.STORE_LOCAL, [Word.FromUI64(idx)])
+@dataclass(frozen=True)
+class STORE_LOCAL(_Instruction):
+    idx : ui64
 
-def StoreParam(idx: int) -> 'Instruction':
-    return Instruction(OpCode.STORE_PARAM, [Word.FromUI64(idx)])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.STORE_LOCAL
 
-def StoreGlobal(name: str) -> 'Instruction':
-    return Instruction(OpCode.STORE_GLOBAL, [name])
+@dataclass(frozen=True)
+class STORE_PARAM(_Instruction):
+    idx : ui64
 
-def StoreMem(offset: int) -> 'Instruction':
-    return Instruction(OpCode.STORE_MEM, [Word.FromI64(offset)])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.STORE_PARAM
 
-def Add(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.ADD, [dt])
+@dataclass(frozen=True)
+class STORE_GLOBAL(_Instruction):
+    name : str
 
-def Sub(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.SUB, [dt])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.STORE_GLOBAL
 
-def Mul(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.MUL, [dt])
+@dataclass(frozen=True)
+class STORE_MEM(_Instruction):
+    offset : i64
 
-def DIV(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.DIV, [dt])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.STORE_MEM
 
-def MOD(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.MOD, [dt])
+@dataclass(frozen=True)
+class POP(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.POP
 
-def NEG(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.NEG, [dt])
+@dataclass(frozen=True)
+class ADD(_Instruction):
+    data_type: DataType
 
-def INC(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.INC, [dt])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.ADD
 
-def DEC(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.DEC, [dt])
+@dataclass(frozen=True)
+class SUB(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.SUB
 
-def EQ(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.EQ, [dt])
+@dataclass(frozen=True)
+class MUL(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.MUL
 
-def NEQ(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.NEQ, [dt])
+@dataclass(frozen=True)
+class DIV(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.DIV
 
-def GT(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.GT, [dt])
+@dataclass(frozen=True)
+class MOD(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.MOD
 
-def LT(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.LT, [dt])
+@dataclass(frozen=True)
+class INC(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.INC
 
-def GTEQ(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.GTEQ, [dt])
+@dataclass(frozen=True)
+class DEC(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.DEC
 
-def LTEQ(dt: DataType) -> 'Instruction':
-    return Instruction(OpCode.LTEQ, [dt])
+@dataclass(frozen=True)
+class EQ(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.EQ
 
-def OR() -> 'Instruction':
-    return Instruction(OpCode.OR, [])
+@dataclass(frozen=True)
+class NEQ(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.NEQ
 
-def AND() -> 'Instruction':
-    return Instruction(OpCode.AND, [])
+@dataclass(frozen=True)
+class GT(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.GT
 
-def XOR() -> 'Instruction':
-    return Instruction(OpCode.XOR, [])
+@dataclass(frozen=True)
+class LT(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LT
 
-def NOT() -> 'Instruction':
-    return Instruction(OpCode.NOT, [])
+@dataclass(frozen=True)
+class LTEQ(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LTEQ
 
-def SHL(amt: int) -> 'Instruction':
-    assert amt >= 0
-    return Instruction(OpCode.SHL, [amt])
+@dataclass(frozen=True)
+class GTEQ(_Instruction):
+    data_type: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.GTEQ
 
-def SHR(amt: int) -> 'Instruction':
-    assert amt >= 0
-    return Instruction(OpCode.SHR, [amt])
+@dataclass(frozen=True)
+class NEG(_Instruction):
+    data_type: Literal[DataType.I8, DataType.I16, DataType.I32, DataType.I64, DataType.F32, DataType.F64]
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.NEG
 
-def Jump(label: str) -> 'Instruction':
-    return Instruction(OpCode.JUMP, [label])
+@dataclass(frozen=True)
+class OR(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.OR
 
-def CondJump(true_label: str, false_label: str) -> 'Instruction':
-    return Instruction(OpCode.COND_JUMP, [true_label, false_label])
+@dataclass(frozen=True)
+class AND(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.AND
 
-def IndirectJump() -> 'Instruction':
-    return Instruction(OpCode.INDIRECT_JUMP, [])
+@dataclass(frozen=True)
+class XOR(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.XOR
 
-def IndirectCondJump(true_label: str, false_label: str) -> 'Instruction':
-    return Instruction(OpCode.INDIRECT_COND_JUMP, [true_label, false_label])
+@dataclass(frozen=True)
+class NOT(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.NOT
 
-def Call(label: str) -> 'Instruction':
-    return Instruction(OpCode.CALL, [label])
+@dataclass(frozen=True)
+class SHL(_Instruction):
+    amt : Literal[0, 1, 2, 3, 4, 5, 6, 7, 8]
 
-def IndirectCall() -> 'Instruction':
-    return Instruction(OpCode.INDIRECT_CALL, [])
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.SHL
 
-def NativeCall(target: str, num_params: int, returns_value: bool) -> 'Instruction':
-    assert num_params >= 0
-    return Instruction(OpCode.NATIVE_CALL, [target, num_params, returns_value])
+@dataclass(frozen=True)
+class SHR(_Instruction):
+    amt : Literal[0, 1, 2, 3, 4, 5, 6, 7, 8]
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.SHR
 
-def Pop() -> 'Instruction':
-    return Instruction(OpCode.POP, [])
+@dataclass(frozen=True)
+class CONVERT(_Instruction):
+    from_dt: DataType
+    to_dt: DataType
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.CONVERT
 
-def Ret() -> 'Instruction':
-    return Instruction(OpCode.RET, [])
+@dataclass(frozen=True)
+class JUMP(_Instruction):
+    target : str
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.JUMP
+
+@dataclass(frozen=True)
+class COND_JUMP(_Instruction):
+    true_target : str
+    false_target : str
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.COND_JUMP
+
+@dataclass(frozen=True)
+class CALL(_Instruction):
+    target : str
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.CALL
+
+@dataclass(frozen=True)
+class INDIRECT_CALL(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.INDIRECT_CALL
+
+@dataclass(frozen=True)
+class NATIVE_CALL(_Instruction):
+    target : str
+    num_params : uint
+    returns_value : bool
+    
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.CALL
+
+@dataclass(frozen=True)
+class RET(_Instruction):
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.RET
+
+Instruction = Union[
+    NOOP,
+    LOAD_CONST,
+    LOAD_LOCAL,
+    LOAD_PARAM,
+    LOAD_GLOBAL,
+    LOAD_MEM,
+    LOAD_FUNC_ADDR,
+    POP,
+    STORE_LOCAL,
+    STORE_PARAM,
+    STORE_GLOBAL,
+    STORE_MEM,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    INC,
+    DEC,
+    EQ,
+    NEQ,
+    GT,
+    LT,
+    GTEQ,
+    LTEQ,
+    NEG,
+    OR,
+    AND,
+    XOR,
+    NOT,
+    SHL,
+    SHR,
+    CONVERT,
+    JUMP,
+    COND_JUMP,
+    CALL,
+    INDIRECT_CALL,
+    NATIVE_CALL,
+    RET
+]
