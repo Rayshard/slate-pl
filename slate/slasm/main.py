@@ -2,7 +2,7 @@ from textwrap import dedent
 from slate.slasm.function import BasicBlock, Function
 from slate.slasm.program import Program
 from slate.slasm.slasm import Word
-from slate.slasm.emitters import json_emitter, llvm_emitter, nasm_emitter, xml_emitter
+from slate.slasm.visitors import json_visitor, llvm_visitor, nasm_visitor, xml_visitor
 from slate.slasm import instruction
 
 from llvmlite import ir # type: ignore
@@ -25,16 +25,16 @@ def main():
     program.entry = function.name
 
     with open('tests/test.slasm.xml', 'w') as file:
-        file.write(xml_emitter.to_string(xml_emitter.emit_Program(program)))
+        file.write(xml_visitor.to_string(xml_visitor.emit_Program(program)))
 
     with open('tests/test.slasm.json', 'w') as file:
-        file.write(json_emitter.to_string(json_emitter.emit_Program(program)))
+        file.write(json_visitor.to_string(json_visitor.emit_Program(program)))
 
     with open('slate/slasm/nasm_template.asm', 'r') as template_file:
         template = template_file.read()
 
         with open('tests/test.asm', 'w') as file:
-            file.write(nasm_emitter.emit_Program(program, template))
+            file.write(nasm_visitor.emit_Program(program, template))
 
     with open('tests/test.ll', 'w') as file:
         def append_LINUX_x86_64_SYSCALL1(llvm_module: ir.Module) -> None:
@@ -56,7 +56,7 @@ def main():
         def setup(llvm_module: ir.Module) -> None:
             append_LINUX_x86_64_SYSCALL1(llvm_module)
 
-        llvm_module = llvm_emitter.emit_Program(program, setup)
+        llvm_module = llvm_visitor.emit_Program(program, setup)
         append_main(llvm_module)
 
         file.write(str(llvm_module))
