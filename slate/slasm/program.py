@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from slasm.function import Function
+from slate.slasm.function import Function
 
 class Program:
     def __init__(self, target: str) -> None:

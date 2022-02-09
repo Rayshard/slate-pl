@@ -1,8 +1,8 @@
 from typing import Any, Callable, Dict
-from slasm.function import Function
-from slasm.instruction import Instruction, OpCode
-from slasm.program import Program
-from slasm.slasm import VERSION, DataType, Word
+from slate.slasm.function import Function
+from slate.slasm.instruction import Instruction, OpCode
+from slate.slasm.program import Program
+from slate.slasm.slasm import VERSION, DataType, Word
 
 class FunctionContext:
     def __init__(self, returns_value: bool) -> None:

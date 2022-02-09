@@ -1,6 +1,6 @@
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
-from slasm.instruction import Instruction, OpCode
+from slate.slasm.instruction import Instruction, OpCode
 
 class BasicBlock:
     __TERMINATING_INSTRUCTIONS = set([

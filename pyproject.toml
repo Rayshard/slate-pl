@@ -6,14 +6,13 @@ authors = ["Rayshard Thompson <rayshard.t123@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/Rayshard/ede-pl"
 packages = [
-    { include = "slate" },
-    { include = "slasm" }
+    { include = "slate" }
 ]
 exclude = ["TODO"]
 
 [tool.poetry.scripts]
 slate = 'slate.main:cli'
-slasm = 'slasm.test:main'
+slasm = 'slate.slasm.test:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10"

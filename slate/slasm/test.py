@@ -1,8 +1,8 @@
-from slasm.function import BasicBlock, Function
-from slasm.program import Program
-from slasm.slasm import Word
-from slasm.translators import llvm_emitter, nasm_emitter, xml_serializer
-from slasm import instruction
+from slate.slasm.function import BasicBlock, Function
+from slate.slasm.program import Program
+from slate.slasm.slasm import Word
+from slate.slasm.translators import llvm_emitter, nasm_emitter, xml_serializer
+from slate.slasm import instruction
 
 from llvmlite import ir # type: ignore
 

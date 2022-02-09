@@ -1,8 +1,8 @@
 from typing import Any, Callable, Dict, List, Optional
-from slasm.function import Function
-from slasm.instruction import Instruction, OpCode
-from slasm.program import Program
-from slasm.slasm import Word
+from slate.slasm.function import Function
+from slate.slasm.instruction import Instruction, OpCode
+from slate.slasm.program import Program
+from slate.slasm.slasm import Word
 
 from llvmlite import ir # type: ignore
 import llvmlite.binding as llvm # type: ignore

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, List, Type, TypeVar, cast
 
-from slasm.slasm import DataType, Word
+from slate.slasm.slasm import DataType, Word
 
 
 class OpCode(Enum):
