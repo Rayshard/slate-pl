@@ -27,18 +27,11 @@ def main():
     with open('tests/test.slasm.xml', 'w') as file:
         file.write(xml_emitter.to_string(xml_emitter.emit_Program(program)))
 
-    with open('tests/test.asm', 'w') as file:
-        text_section_header = dedent(
-            """
-            LINUX_x86_64_SYSCALL1:
-                mov rax, [rsp + 8]
-                mov rdi, [rsp + 16]
-                syscall
-                ret
-            """
-        )
+    with open('slate/slasm/nasm_template.asm', 'r') as template_file:
+        template = template_file.read()
 
-        file.write(nasm_emitter.emit_Program(program, "", text_section_header))
+        with open('tests/test.asm', 'w') as file:
+            file.write(nasm_emitter.emit_Program(program, template))
 
     with open('tests/test.ll', 'w') as file:
         def append_LINUX_x86_64_SYSCALL1(llvm_module: ir.Module) -> None:

@@ -352,3 +352,20 @@ def emit_Program(program: Program, global_header: str = "", text_section_header:
         string += f"\n{emit_Function(function)}"
 
     return string
+
+def emit_Program(program: Program, template: str) -> str:
+    string = template
+
+    assert "#SLASM_VERSION#" in template
+    string = string.replace("#SLASM_VERSION#", VERSION())
+
+    assert "#TARGET#" in template
+    string = string.replace("#TARGET#", program.target)
+
+    assert "#ENTRY_FUNC_NAME#" in template
+    string = string.replace("#ENTRY_FUNC_NAME#", program.entry)
+
+    assert "#SLASM_FUNCS#" in template
+    string = string.replace("#SLASM_FUNCS#", '\n'.join([emit_Function(f) for f in program.functions]))
+
+    return string
