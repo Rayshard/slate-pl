@@ -95,7 +95,7 @@ def __emit_ADD(instr: ADD, ctx: FunctionContext) -> str:
                   "addsd xmm0, xmm1\n" \
                   "movq rax, xmm0\n"
     else:
-        assert False, "Not implemented"
+        raise NotImplementedError(dt)
 
     string += "push rax"
     return string
@@ -125,7 +125,7 @@ def __emit_SUB(instr: SUB, ctx: FunctionContext) -> str:
                   "subsd xmm0, xmm1\n" \
                   "movq rax, xmm0\n"
     else:
-        assert False, "Not implemented"
+        raise NotImplementedError(dt)
 
     string += "push rax"
     return string
@@ -155,7 +155,7 @@ def __emit_MUL(instr: MUL, ctx: FunctionContext) -> str:
                   "mulsd xmm0, xmm1\n" \
                   "movq rax, xmm0\n"
     else:
-        assert False, "Not implemented"
+        raise NotImplementedError(dt)
 
     string += "push rax"
     return string
@@ -273,7 +273,7 @@ def __emit_MOD(instr: MOD, ctx: FunctionContext) -> str:
                   "subsd xmm0, xmm2\n" \
                   "movq rax, xmm0\n"
     else:
-        assert False, "Not implemented"
+        raise NotImplementedError(dt)
 
     string += "push rax"
     return string
