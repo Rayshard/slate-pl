@@ -12,65 +12,65 @@ class FunctionContext:
     def returns_value(self) -> bool:
         return self.__returns_value
 
-def __translate_NOOP(instr: NOOP, ctx: FunctionContext) -> str:
+def __emit_NOOP(instr: NOOP, ctx: FunctionContext) -> str:
     return "; NOOP\n" \
            "xchg rax, rax"
 
-def __translate_LOAD_CONST(instr: LOAD_CONST, ctx: FunctionContext) -> str:
+def __emit_LOAD_CONST(instr: LOAD_CONST, ctx: FunctionContext) -> str:
     value_hex = instr.value.as_hex()
     
     return f"; LOAD_CONST {value_hex}\n" \
            f"mov rax, {value_hex}\n" \
             "push rax"
 
-def __translate_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, ctx: FunctionContext) -> str:
+def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, ctx: FunctionContext) -> str:
     return f"; LOAD_FUNC_ADDR {instr.name}\n" \
            f"lea rax, [rel .{instr.name}]\n" \
             "push rax"
 
-def __translate_LOAD_LOCAL(instr: LOAD_LOCAL, ctx: FunctionContext) -> str:
+def __emit_LOAD_LOCAL(instr: LOAD_LOCAL, ctx: FunctionContext) -> str:
     return f"; LOAD_LOCAL {instr.idx}\n" \
            f"push qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
 
-def __translate_LOAD_PARAM(instr: LOAD_PARAM, ctx: FunctionContext) -> str:
+def __emit_LOAD_PARAM(instr: LOAD_PARAM, ctx: FunctionContext) -> str:
     return f"; LOAD_PARAM {instr.idx}\n" \
            f"push qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
 
-def __translate_LOAD_GLOBAL(instr: LOAD_GLOBAL, ctx: FunctionContext) -> str:
+def __emit_LOAD_GLOBAL(instr: LOAD_GLOBAL, ctx: FunctionContext) -> str:
     return f"; LOAD_GLOBAL {instr.name}\n" \
            f"push qword [rel {instr.name}]"
 
-def __translate_LOAD_MEM(instr: LOAD_MEM, ctx: FunctionContext) -> str:
+def __emit_LOAD_MEM(instr: LOAD_MEM, ctx: FunctionContext) -> str:
     sign = "-" if instr.offset < 0 else "+"
     
     return f"; LOAD_MEM {instr.offset}\n" \
             "pop rax\n" \
            f"push qword [rax{sign}{abs(instr.offset)}]"
     
-def __translate_STORE_LOCAL(instr: STORE_LOCAL, ctx: FunctionContext) -> str:
+def __emit_STORE_LOCAL(instr: STORE_LOCAL, ctx: FunctionContext) -> str:
     return f"; STORE_LOCAL {instr.idx}\n" \
            f"pop qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
 
-def __translate_STORE_PARAM(instr: STORE_PARAM, ctx: FunctionContext) -> str:
+def __emit_STORE_PARAM(instr: STORE_PARAM, ctx: FunctionContext) -> str:
     return f"; STORE_PARAM {instr.idx}\n" \
            f"pop qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
 
-def __translate_STORE_GLOBAL(instr: STORE_GLOBAL, ctx: FunctionContext) -> str:
+def __emit_STORE_GLOBAL(instr: STORE_GLOBAL, ctx: FunctionContext) -> str:
     return f"; STORE_GLOBAL {instr.name}\n" \
            f"pop qword [rel {instr.name}]"
 
-def __translate_STORE_MEM(instr: STORE_MEM, ctx: FunctionContext) -> str:
+def __emit_STORE_MEM(instr: STORE_MEM, ctx: FunctionContext) -> str:
     sign = "-" if instr.offset < 0 else "+"
     
     return f"; STORE_MEM {instr.offset}\n" \
             "pop rax\n" \
            f"pop qword [rax{sign}{abs(instr.offset)}]"
 
-def __translate_POP(instr: POP, ctx: FunctionContext) -> str:
+def __emit_POP(instr: POP, ctx: FunctionContext) -> str:
     return  "; POP\n" \
            f"add rsp, {Word.SIZE()}"
 
-def __translate_ADD(instr: ADD, ctx: FunctionContext) -> str:
+def __emit_ADD(instr: ADD, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; ADD {dt.name}\n" \
               "pop rax\n" \
@@ -100,7 +100,7 @@ def __translate_ADD(instr: ADD, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_SUB(instr: SUB, ctx: FunctionContext) -> str:
+def __emit_SUB(instr: SUB, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; SUB {dt.name}\n" \
               "pop rax\n" \
@@ -130,7 +130,7 @@ def __translate_SUB(instr: SUB, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_MUL(instr: MUL, ctx: FunctionContext) -> str:
+def __emit_MUL(instr: MUL, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; MUL {dt.name}\n" \
               "pop rax\n" \
@@ -160,7 +160,7 @@ def __translate_MUL(instr: MUL, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_DIV(instr: DIV, ctx: FunctionContext) -> str:
+def __emit_DIV(instr: DIV, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; DIV {dt.name}\n" \
               "pop rax\n" \
@@ -210,7 +210,7 @@ def __translate_DIV(instr: DIV, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_MOD(instr: MOD, ctx: FunctionContext) -> str:
+def __emit_MOD(instr: MOD, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; MOD {dt.name}\n" \
               "pop rax\n" \
@@ -278,7 +278,7 @@ def __translate_MOD(instr: MOD, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __translate_NATIVE_CALL(instr: NATIVE_CALL, ctx: FunctionContext) -> str:
+def __emit_NATIVE_CALL(instr: NATIVE_CALL, ctx: FunctionContext) -> str:
     string = f"; NATIVE CALL\n" \
              f"call {instr.target}\n"
 
@@ -290,7 +290,7 @@ def __translate_NATIVE_CALL(instr: NATIVE_CALL, ctx: FunctionContext) -> str:
     
     return string
 
-def __translate_RET(instr: RET, ctx: FunctionContext) -> str:
+def __emit_RET(instr: RET, ctx: FunctionContext) -> str:
     string = "; RET\n"
 
     if ctx.returns_value:
@@ -300,34 +300,34 @@ def __translate_RET(instr: RET, ctx: FunctionContext) -> str:
     return string
 
 __INSTRUCTION_TRANSLATORS : Dict[OpCode, Callable[..., str]] = {
-    OpCode.NOOP: __translate_NOOP,
-    OpCode.LOAD_CONST: __translate_LOAD_CONST,
-    OpCode.LOAD_LOCAL: __translate_LOAD_LOCAL,
-    OpCode.LOAD_PARAM: __translate_LOAD_PARAM,
-    OpCode.LOAD_GLOBAL: __translate_LOAD_GLOBAL,
-    OpCode.LOAD_MEM: __translate_LOAD_MEM,
-    OpCode.LOAD_FUNC_ADDR: __translate_LOAD_FUNC_ADDR,
-    OpCode.STORE_LOCAL: __translate_STORE_LOCAL,
-    OpCode.STORE_PARAM: __translate_STORE_PARAM,
-    OpCode.STORE_GLOBAL: __translate_STORE_GLOBAL,
-    OpCode.STORE_MEM: __translate_STORE_MEM,
-    OpCode.POP: __translate_POP,
-    OpCode.ADD: __translate_ADD,
-    OpCode.SUB: __translate_SUB,
-    OpCode.MUL: __translate_MUL,
-    OpCode.DIV: __translate_DIV,
-    OpCode.MOD: __translate_MOD,
-    OpCode.NATIVE_CALL: __translate_NATIVE_CALL,
-    OpCode.RET: __translate_RET,
+    OpCode.NOOP: __emit_NOOP,
+    OpCode.LOAD_CONST: __emit_LOAD_CONST,
+    OpCode.LOAD_LOCAL: __emit_LOAD_LOCAL,
+    OpCode.LOAD_PARAM: __emit_LOAD_PARAM,
+    OpCode.LOAD_GLOBAL: __emit_LOAD_GLOBAL,
+    OpCode.LOAD_MEM: __emit_LOAD_MEM,
+    OpCode.LOAD_FUNC_ADDR: __emit_LOAD_FUNC_ADDR,
+    OpCode.STORE_LOCAL: __emit_STORE_LOCAL,
+    OpCode.STORE_PARAM: __emit_STORE_PARAM,
+    OpCode.STORE_GLOBAL: __emit_STORE_GLOBAL,
+    OpCode.STORE_MEM: __emit_STORE_MEM,
+    OpCode.POP: __emit_POP,
+    OpCode.ADD: __emit_ADD,
+    OpCode.SUB: __emit_SUB,
+    OpCode.MUL: __emit_MUL,
+    OpCode.DIV: __emit_DIV,
+    OpCode.MOD: __emit_MOD,
+    OpCode.NATIVE_CALL: __emit_NATIVE_CALL,
+    OpCode.RET: __emit_RET,
 }
 
-def translate_Instruction(instr: Instruction, ctx: FunctionContext) -> str:
+def emit_Instruction(instr: Instruction, ctx: FunctionContext) -> str:
     if instr.opcode not in __INSTRUCTION_TRANSLATORS:
         raise NotImplementedError(instr.opcode)
 
     return __INSTRUCTION_TRANSLATORS[instr.opcode](instr, ctx)
 
-def translate_Function(function: Function) -> str:
+def emit_Function(function: Function) -> str:
     ctx = FunctionContext(function.returns_value)
     string = f"{function.name}:"
 
@@ -335,12 +335,12 @@ def translate_Function(function: Function) -> str:
         string += f"\n  .{label}:"
 
         for instr in bb:
-            nasm = translate_Instruction(instr, ctx).replace('\n', '\n    ')
+            nasm = emit_Instruction(instr, ctx).replace('\n', '\n    ')
             string += f"\n    {nasm}"
 
     return string
 
-def translate_Program(program: Program, global_header: str = "", text_section_header: str = "") -> str:
+def emit_Program(program: Program, global_header: str = "", text_section_header: str = "") -> str:
     string = f"; SLASM_VERSION {VERSION()}\n" \
              f"; TARGET {program.target}\n\n"
 
@@ -349,6 +349,6 @@ def translate_Program(program: Program, global_header: str = "", text_section_he
     string += text_section_header if len(text_section_header) != 0 else ""
 
     for function in program.functions:
-        string += f"\n{translate_Function(function)}"
+        string += f"\n{emit_Function(function)}"
 
     return string

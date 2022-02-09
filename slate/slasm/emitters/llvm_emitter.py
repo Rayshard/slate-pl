@@ -53,34 +53,34 @@ class GlobalContext:
 
         return llvm_global 
 
-def __translate_LOAD_CONST(instr: LOAD_CONST, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+def __emit_LOAD_CONST(instr: LOAD_CONST, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
     func_ctx.push_value_onto_stack(ir.Constant(LLVMTypeWord, instr.value.as_ui64()))
 
-def __translate_NATIVE_CALL(instr: NATIVE_CALL, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+def __emit_NATIVE_CALL(instr: NATIVE_CALL, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
     call_value = llvm_builder.call(global_ctx.get_function(instr.target), [func_ctx.pop_value_from_stack() for _ in range(instr.num_params)])
     
     if instr.returns_value:
         func_ctx.push_value_onto_stack(call_value)
 
-def __translate_RET(instr: RET, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+def __emit_RET(instr: RET, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
     if func_ctx.returns_value:
         llvm_builder.ret(func_ctx.pop_value_from_stack())
     else:
         llvm_builder.ret_void()
 
 __TRANSLATORS : Dict[Any, Callable[..., None]] = {
-    OpCode.LOAD_CONST: __translate_LOAD_CONST,
-    OpCode.NATIVE_CALL: __translate_NATIVE_CALL,
-    OpCode.RET: __translate_RET,
+    OpCode.LOAD_CONST: __emit_LOAD_CONST,
+    OpCode.NATIVE_CALL: __emit_NATIVE_CALL,
+    OpCode.RET: __emit_RET,
 }
 
-def translate_Instruction(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
+def emit_Instruction(instr: Instruction, llvm_builder: ir.IRBuilder, func_ctx: FunctionContext, global_ctx: GlobalContext) -> None:
     if instr.opcode not in __TRANSLATORS:
         raise NotImplementedError(instr.opcode)
 
     __TRANSLATORS[instr.opcode](instr, llvm_builder, func_ctx, global_ctx)
 
-def translate_Function(function: Function, llvm_module: ir.Module, global_ctx: GlobalContext):
+def emit_Function(function: Function, llvm_module: ir.Module, global_ctx: GlobalContext):
     llvm_func_type = ir.FunctionType(LLVMTypeWord if function.returns_value else ir.VoidType(), [LLVMTypeWord] * function.num_params)
     llvm_func = ir.Function(llvm_module, llvm_func_type, function.name)
     
@@ -91,17 +91,17 @@ def translate_Function(function: Function, llvm_module: ir.Module, global_ctx: G
         llvm_builder = ir.IRBuilder(context.get_basic_block(label))
 
         for instr in bb:
-            translate_Instruction(instr, llvm_builder, context, global_ctx)
+            emit_Instruction(instr, llvm_builder, context, global_ctx)
 
     return llvm_func
 
-def translate_Program(program: Program, setup_callback: Callable[[ir.Module], None]) -> ir.Module:
+def emit_Program(program: Program, setup_callback: Callable[[ir.Module], None]) -> ir.Module:
     llvm_module = ir.Module(name="")
     setup_callback(llvm_module)
 
     global_ctx = GlobalContext(llvm_module)
 
     for function in program.functions:
-        translate_Function(function, llvm_module, global_ctx)
+        emit_Function(function, llvm_module, global_ctx)
 
     return llvm_module

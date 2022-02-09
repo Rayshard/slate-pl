@@ -25,7 +25,7 @@ def main():
     program.entry = function.name
 
     with open('tests/test.slasm.xml', 'w') as file:
-        file.write(xml_emitter.to_string(xml_emitter.translate_Program(program)))
+        file.write(xml_emitter.to_string(xml_emitter.emit_Program(program)))
 
     with open('tests/test.asm', 'w') as file:
         text_section_header = dedent(
@@ -38,7 +38,7 @@ def main():
             """
         )
 
-        file.write(nasm_emitter.translate_Program(program, "", text_section_header))
+        file.write(nasm_emitter.emit_Program(program, "", text_section_header))
 
     with open('tests/test.ll', 'w') as file:
         def append_LINUX_x86_64_SYSCALL1(llvm_module: ir.Module) -> None:
@@ -60,7 +60,7 @@ def main():
         def setup(llvm_module: ir.Module) -> None:
             append_LINUX_x86_64_SYSCALL1(llvm_module)
 
-        llvm_module = llvm_emitter.translate_Program(program, setup)
+        llvm_module = llvm_emitter.emit_Program(program, setup)
         append_main(llvm_module)
 
         file.write(str(llvm_module))
