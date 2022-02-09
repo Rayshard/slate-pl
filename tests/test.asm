@@ -1,21 +1,24 @@
 ; SLASM_VERSION 1.0
 ; TARGET x86-64-linux-nasm
 
-%macro LINUX_x86_64_SYSCALL1 1
-    MOV RAX, %1
-    POP RDI
-    SYSCALL
-%endmacro
-
     global _main
 
     section .text
 _main:
-FUNC_Main:
-    ; LOAD_CONST 0x000000000000007b
-    MOV RAX, 0x000000000000007b
-    PUSH RAX
-    ; NATIVE ASSEMBLY
-    LINUX_x86_64_SYSCALL1 0x2000001
+    call SLASM_Main
+    ret ; note that rax alreeady contains the exit code from previous call instruction
+
+LINUX_x86_64_SYSCALL1:
+    mov rax, [rsp + 8]
+    mov rdi, [rsp + 16]
+    syscall
+    ret
+
+SLASM_Main:
+  .entry:
+    ; LOAD_CONST 0x0000000000000040
+    mov rax, 0x0000000000000040
+    push rax
     ; RET
-    RET
+    pop rax
+    ret

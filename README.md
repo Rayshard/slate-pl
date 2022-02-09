@@ -1,6 +1,11 @@
 # slate-pl
 Slate Programming Language
 
+### Future Slate Features
+- Function Overloading
+- Enums
+- Bignums (Arbitrary length integers)
+
 ## Importing and Exporting
 Given the following directory structure:
 ```

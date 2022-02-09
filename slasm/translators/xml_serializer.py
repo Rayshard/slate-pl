@@ -12,12 +12,6 @@ def __translate_InstrNoop(instr: Instruction) -> ET.Element:
 def __translate_InstrLoadConst(instr: Instruction) -> ET.Element:
     return ET.Element("LOAD_CONST", {"value": instr.get_operand(0, Word).as_hex()})
 
-def __translate_InstrInlineNasm(instr: Instruction) -> ET.Element:
-    return ET.Element("INLINE_NASM", {"asm": instr.get_operand(0, str)})
-
-def __translate_InstrRet(instr: Instruction) -> ET.Element:
-    return ET.Element("RET")
-
 def __translate_InstrLoadLabel(instr: Instruction) -> ET.Element:
     return ET.Element("LOAD_LABEL", {"label": instr.get_operand(0, str)})
 
@@ -63,11 +57,15 @@ def __translate_InstrDiv(instr: Instruction) -> ET.Element:
 def __translate_InstrMod(instr: Instruction) -> ET.Element:
     return ET.Element("MOD", {"type": str(instr.get_operand(0, DataType).name)})
 
+def __translate_InstrNativeCall(instr: Instruction) -> ET.Element:
+    return ET.Element("NATIVE_CALL", {"target": instr.get_operand(0, str), "num_params": str(instr.get_operand(1, int)), "returns_value": str(instr.get_operand(2, bool))})
+
+def __translate_InstrRet(instr: Instruction) -> ET.Element:
+    return ET.Element("RET")
+
 __TRANSLATORS : Dict[Any, Callable[..., ET.Element]] = {
     OpCode.NOOP: __translate_InstrNoop,
     OpCode.LOAD_CONST: __translate_InstrLoadConst,
-    OpCode.INLINE_NASM: __translate_InstrInlineNasm,
-    OpCode.RET: __translate_InstrRet,
     OpCode.LOAD_LABEL: __translate_InstrLoadLabel,
     OpCode.LOAD_LOCAL: __translate_InstrLoadLocal,
     OpCode.LOAD_PARAM: __translate_InstrLoadParam,
@@ -83,6 +81,8 @@ __TRANSLATORS : Dict[Any, Callable[..., ET.Element]] = {
     OpCode.MUL: __translate_InstrMul,
     OpCode.DIV: __translate_InstrDiv,
     OpCode.MOD: __translate_InstrMod,
+    OpCode.NATIVE_CALL: __translate_InstrNativeCall,
+    OpCode.RET: __translate_InstrRet,
 }
 
 def translate_Instruction(instr: Instruction) -> ET.Element:
@@ -92,13 +92,19 @@ def translate_Instruction(instr: Instruction) -> ET.Element:
     return __TRANSLATORS[instr.opcode](instr)
 
 def translate_Function(function: Function) -> ET.Element:
-    element = ET.Element("function", {"name": function.name, "params": str(function.num_params), "locals": str(function.num_locals)})
+    element = ET.Element("function", {"name": function.name,
+                                      "params": str(function.num_params),
+                                      "locals": str(function.num_locals),
+                                      "entry": function.entry
+                                      })
 
-    for elem in function.code:
-        if isinstance(elem, Instruction):
-            element.append(translate_Instruction(elem))
-        else:
-            element.append(ET.Element("LABEL", {"name": elem}))
+    for label, bb in function.basic_blocks:
+        bb_elem = ET.Element("BasicBlock", {"label": label})
+        
+        for instr in bb:
+            bb_elem.append(translate_Instruction(instr))
+
+        element.append(bb_elem)
 
     return element
 

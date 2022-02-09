@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <program slasm_version="1.0" target="x86-64-linux-nasm">
-    <code entry="Main">
-        <function name="Main" params="0" locals="0">
-            <LOAD_CONST value="0x000000000000007b"/>
-            <INLINE_NASM asm="LINUX_x86_64_SYSCALL1 0x2000001"/>
-            <RET/>
+    <code entry="SLASM_Main">
+        <function name="SLASM_Main" params="0" locals="0" entry="entry">
+            <BasicBlock label="entry">
+                <LOAD_CONST value="0x0000000000000040"/>
+                <RET/>
+            </BasicBlock>
         </function>
     </code>
 </program>

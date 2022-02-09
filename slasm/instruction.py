@@ -1,8 +1,8 @@
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, List, Type, TypeVar, cast
 
 from slasm.slasm import DataType, Word
-from llvmlite import ir # type: ignore
 
 
 class OpCode(Enum):
@@ -45,21 +45,16 @@ class OpCode(Enum):
     CONVERT = auto()
 
     JUMP = auto()
-    JUMPZ = auto()
-    JUMPNZ = auto()
-    SJUMP = auto()
-    SJUMPZ = auto()
-    SJUMPNZ = auto()
+    INDIRECT_JUMP = auto()
+    COND_JUMP = auto()
+    INDIRECT_COND_JUMP = auto()
     CALL = auto()
-    SCALL = auto()
+    INDIRECT_CALL = auto()
+    NATIVE_CALL = auto()
     RET = auto()
-
-    INLINE_NASM = auto()
-    INLINE_LLVM = auto()
 
 _TOperand = TypeVar("_TOperand")
 Operand = Any
-Label = str
 
 class Instruction:
     def __init__(self, opcode: OpCode, operands: List[Operand]) -> None:
@@ -85,7 +80,7 @@ def Noop() -> 'Instruction':
 def LoadConst(value: Word) -> 'Instruction':
     return Instruction(OpCode.LOAD_CONST, [value])
 
-def LoadLabel(label: Label) -> 'Instruction':
+def LoadLabel(label: str) -> 'Instruction':
     return Instruction(OpCode.LOAD_LABEL, [label])
 
 def LoadLocal(idx: int) -> 'Instruction':
@@ -167,43 +162,37 @@ def NOT() -> 'Instruction':
     return Instruction(OpCode.NOT, [])
 
 def SHL(amt: int) -> 'Instruction':
+    assert amt >= 0
     return Instruction(OpCode.SHL, [amt])
 
 def SHR(amt: int) -> 'Instruction':
+    assert amt >= 0
     return Instruction(OpCode.SHR, [amt])
 
-def Jump(label: Label) -> 'Instruction':
+def Jump(label: str) -> 'Instruction':
     return Instruction(OpCode.JUMP, [label])
 
-def JumpZ(label: Label) -> 'Instruction':
-    return Instruction(OpCode.JUMPZ, [label])
+def CondJump(true_label: str, false_label: str) -> 'Instruction':
+    return Instruction(OpCode.COND_JUMP, [true_label, false_label])
 
-def JumpNZ(label: Label) -> 'Instruction':
-    return Instruction(OpCode.JUMPNZ, [label])
+def IndirectJump() -> 'Instruction':
+    return Instruction(OpCode.INDIRECT_JUMP, [])
 
-def SJump() -> 'Instruction':
-    return Instruction(OpCode.SJUMP, [])
+def IndirectCondJump(true_label: str, false_label: str) -> 'Instruction':
+    return Instruction(OpCode.INDIRECT_COND_JUMP, [true_label, false_label])
 
-def SJumpZ() -> 'Instruction':
-    return Instruction(OpCode.SJUMPZ, [])
-
-def SJumpNZ() -> 'Instruction':
-    return Instruction(OpCode.SJUMPNZ, [])
-
-def Call(label: Label) -> 'Instruction':
+def Call(label: str) -> 'Instruction':
     return Instruction(OpCode.CALL, [label])
 
-def SCall() -> 'Instruction':
-    return Instruction(OpCode.SCALL, [])
+def IndirectCall() -> 'Instruction':
+    return Instruction(OpCode.INDIRECT_CALL, [])
+
+def NativeCall(target: str, num_params: int, returns_value: bool) -> 'Instruction':
+    assert num_params >= 0
+    return Instruction(OpCode.NATIVE_CALL, [target, num_params, returns_value])
 
 def Pop() -> 'Instruction':
     return Instruction(OpCode.POP, [])
 
 def Ret() -> 'Instruction':
     return Instruction(OpCode.RET, [])
-
-def InlineNasm(asm: str) -> 'Instruction':
-    return Instruction(OpCode.INLINE_NASM, [asm])
-
-def InlineLLVM(asm: ir.Value) -> 'Instruction':
-    return Instruction(OpCode.INLINE_LLVM, [asm])
