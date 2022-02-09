@@ -2,7 +2,7 @@ from textwrap import dedent
 from slate.slasm.function import BasicBlock, Function
 from slate.slasm.program import Program
 from slate.slasm.slasm import Word
-from slate.slasm.emitters import llvm_emitter, nasm_emitter, xml_emitter
+from slate.slasm.emitters import json_emitter, llvm_emitter, nasm_emitter, xml_emitter
 from slate.slasm import instruction
 
 from llvmlite import ir # type: ignore
@@ -26,6 +26,9 @@ def main():
 
     with open('tests/test.slasm.xml', 'w') as file:
         file.write(xml_emitter.to_string(xml_emitter.emit_Program(program)))
+
+    with open('tests/test.slasm.json', 'w') as file:
+        file.write(json_emitter.to_string(json_emitter.emit_Program(program)))
 
     with open('slate/slasm/nasm_template.asm', 'r') as template_file:
         template = template_file.read()

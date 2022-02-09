@@ -1,0 +1,27 @@
+{
+    "slasm_version": "1.0",
+    "target": "x86-64-linux-nasm",
+    "code": {
+        "entry": "SLASM_Main",
+        "functions": {
+            "SLASM_Main": {
+                "name": "SLASM_Main",
+                "params": 0,
+                "locals": 0,
+                "returns_value": true,
+                "entry": "entry",
+                "basic_blocks": {
+                    "entry": [
+                        {
+                            "opcode": "LOAD_CONST",
+                            "value": "0x0000000000000040"
+                        },
+                        {
+                            "opcode": "RET"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
