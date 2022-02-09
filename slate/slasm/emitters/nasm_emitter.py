@@ -340,19 +340,6 @@ def emit_Function(function: Function) -> str:
 
     return string
 
-def emit_Program(program: Program, global_header: str = "", text_section_header: str = "") -> str:
-    string = f"; SLASM_VERSION {VERSION()}\n" \
-             f"; TARGET {program.target}\n\n"
-
-    string += (global_header + "\n\n") if len(global_header) != 0 else ""
-    string += f"    global _main\n\n    section .text\n_main:\n    call {program.entry}\n    ret ; note that rax alreeady contains the exit code from previous call instruction\n"
-    string += text_section_header if len(text_section_header) != 0 else ""
-
-    for function in program.functions:
-        string += f"\n{emit_Function(function)}"
-
-    return string
-
 def emit_Program(program: Program, template: str) -> str:
     string = template
 
