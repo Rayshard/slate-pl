@@ -1,21 +1,11 @@
+from textwrap import dedent
 from slate.slasm.function import BasicBlock, Function
 from slate.slasm.program import Program
 from slate.slasm.slasm import Word
-from slate.slasm.translators import llvm_emitter, nasm_emitter, xml_serializer
+from slate.slasm.emitters import llvm_emitter, nasm_emitter, xml_emitter
 from slate.slasm import instruction
 
 from llvmlite import ir # type: ignore
-
-
-# __PARAM_REGISTERS = ["RDI", "RSI", "RDX", "R10", "R8", "R9"]
-# syscall_code, num_params = self.get_operand(0, Word), self.get_operand(1, int)
-# string = f"; SYSCALL_LINUX {syscall_code.as_ui64()}, {num_params}\n" \
-#             f"MOV RAX, {syscall_code.as_hex()}"
-
-# for i in range(num_params):
-#     string += f"\nPOP {__PARAM_REGISTERS[i]}"
-
-# string += "\nSYSCALL"
 
 def main():
     program = Program(target="x86-64-linux-nasm")
@@ -34,21 +24,19 @@ def main():
     program.add_function(function)
     program.entry = function.name
 
-    # with open('tests/test.slasm', 'wb') as file:
-    #     file.write(program.get_bytes())
-
     with open('tests/test.slasm.xml', 'w') as file:
-        file.write(xml_serializer.to_string(xml_serializer.translate_Program(program)))
+        file.write(xml_emitter.to_string(xml_emitter.translate_Program(program)))
 
     with open('tests/test.asm', 'w') as file:
-        text_section_header = \
-"""
-LINUX_x86_64_SYSCALL1:
-    mov rax, [rsp + 8]
-    mov rdi, [rsp + 16]
-    syscall
-    ret
-"""
+        text_section_header = dedent(
+            """
+            LINUX_x86_64_SYSCALL1:
+                mov rax, [rsp + 8]
+                mov rdi, [rsp + 16]
+                syscall
+                ret
+            """
+        )
 
         file.write(nasm_emitter.translate_Program(program, "", text_section_header))
 
