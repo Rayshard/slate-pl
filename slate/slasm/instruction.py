@@ -75,7 +75,7 @@ class LOAD_CONST(_Instruction):
 
 @dataclass(frozen=True)
 class LOAD_FUNC_ADDR(_Instruction):
-    name : str
+    func_name : str
 
     @property
     def opcode(self) -> OpCode:

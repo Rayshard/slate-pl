@@ -24,8 +24,8 @@ def __emit_LOAD_CONST(instr: LOAD_CONST, ctx: FunctionContext) -> str:
             "push rax"
 
 def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, ctx: FunctionContext) -> str:
-    return f"; LOAD_FUNC_ADDR {instr.name}\n" \
-           f"lea rax, [rel .{instr.name}]\n" \
+    return f"; LOAD_FUNC_ADDR {instr.func_name}\n" \
+           f"lea rax, [rel .{instr.func_name}]\n" \
             "push rax"
 
 def __emit_LOAD_LOCAL(instr: LOAD_LOCAL, ctx: FunctionContext) -> str:

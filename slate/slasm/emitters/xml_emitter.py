@@ -13,7 +13,7 @@ def __emit_LOAD_CONST(instr: LOAD_CONST) -> ET.Element:
     return ET.Element("LOAD_CONST", {"value": instr.value.as_hex()})
 
 def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR) -> ET.Element:
-    return ET.Element("LOAD_FUNC_ADDR", {"name": instr.name})
+    return ET.Element("LOAD_FUNC_ADDR", {"name": instr.func_name})
 
 def __emit_LOAD_LOCAL(instr: LOAD_LOCAL) -> ET.Element:
     return ET.Element("LOAD_LOCAL", {"idx": str(instr.idx)})
