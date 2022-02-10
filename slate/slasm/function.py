@@ -6,8 +6,6 @@ class BasicBlock:
     __TERMINATING_INSTRUCTIONS = set([
         OpCode.JUMP,
         OpCode.COND_JUMP,
-        OpCode.CALL,
-        OpCode.INDIRECT_CALL,
         OpCode.RET
     ])
 

@@ -3,6 +3,8 @@
     <code entry="SLASM_Main">
         <function name="SLASM_Main" params="0" locals="0" returns_value="true" entry="entry">
             <BasicBlock label="entry">
+                <LOAD_CONST value="0x000000000000007b"/>
+                <NATIVE_CALL target="print_i64" num_params="1" returns_value="False"/>
                 <LOAD_CONST value="0x0000000000000040"/>
                 <RET/>
             </BasicBlock>

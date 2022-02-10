@@ -16,6 +16,7 @@ class OpCode(Enum):
     LOAD_GLOBAL = auto()
     LOAD_MEM = auto()
     LOAD_FUNC_ADDR = auto()
+    LOAD_NATIVE_FUNC_ADDR = auto()
 
     POP = auto()
     STORE_LOCAL = auto()
@@ -80,6 +81,14 @@ class LOAD_FUNC_ADDR(_Instruction):
     @property
     def opcode(self) -> OpCode:
         return OpCode.LOAD_FUNC_ADDR
+
+@dataclass(frozen=True)
+class LOAD_NATIVE_FUNC_ADDR(_Instruction):
+    func_name : str
+
+    @property
+    def opcode(self) -> OpCode:
+        return OpCode.LOAD_NATIVE_FUNC_ADDR
 
 @dataclass(frozen=True)
 class LOAD_LOCAL(_Instruction):
@@ -351,7 +360,7 @@ class NATIVE_CALL(_Instruction):
     
     @property
     def opcode(self) -> OpCode:
-        return OpCode.CALL
+        return OpCode.NATIVE_CALL
 
 @dataclass(frozen=True)
 class RET(_Instruction):

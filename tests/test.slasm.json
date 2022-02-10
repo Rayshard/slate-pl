@@ -14,6 +14,16 @@
                     "entry": [
                         {
                             "opcode": "LOAD_CONST",
+                            "value": "0x000000000000007b"
+                        },
+                        {
+                            "opcode": "NATIVE_CALL",
+                            "target": "print_i64",
+                            "num_params": 1,
+                            "returns_value": false
+                        },
+                        {
+                            "opcode": "LOAD_CONST",
                             "value": "0x0000000000000040"
                         },
                         {
