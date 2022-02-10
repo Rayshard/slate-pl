@@ -61,6 +61,9 @@ class FunctionContext:
 def __emit_LOAD_CONST(instr: LOAD_CONST, llvm_builder: ir.IRBuilder, ctx: FunctionContext) -> None:
     ctx.push_value_onto_stack(ir.Constant(LLVMTypeWord, instr.value.as_ui64()))
 
+def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, llvm_builder: ir.IRBuilder, ctx: FunctionContext) -> None:
+    ctx.push_value_onto_stack(ctx.global_ctx.get_function(instr.func_name))
+
 def __emit_CALL(instr: CALL, llvm_builder: ir.IRBuilder, ctx: FunctionContext) -> None:
     call_value = llvm_builder.call(ctx.global_ctx.get_function(instr.target), [ctx.pop_value_from_stack() for _ in range(instr.num_params)])
     
@@ -75,6 +78,7 @@ def __emit_RET(instr: RET, llvm_builder: ir.IRBuilder, ctx: FunctionContext) -> 
 
 __TRANSLATORS : Dict[Any, Callable[..., None]] = {
     OpCode.LOAD_CONST: __emit_LOAD_CONST,
+    OpCode.LOAD_FUNC_ADDR: __emit_LOAD_FUNC_ADDR,
     OpCode.CALL: __emit_CALL,
     OpCode.RET: __emit_RET,
 }

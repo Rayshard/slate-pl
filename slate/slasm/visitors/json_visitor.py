@@ -11,6 +11,9 @@ def __emit_NOOP(instr: NOOP) -> Any:
 def __emit_LOAD_CONST(instr: LOAD_CONST) -> Any:
     return {"opcode": instr.opcode.name, "value": instr.value.as_hex()}
 
+def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR) -> Any:
+    return {"opcode": instr.opcode.name, "func_name": instr.func_name}
+
 def __emit_CALL(instr: CALL) -> Any:
     return {"opcode": instr.opcode.name, "target": instr.target, "num_params": instr.num_params, "returns_value": instr.returns_value}
 
