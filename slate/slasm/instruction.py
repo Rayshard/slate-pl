@@ -16,7 +16,6 @@ class OpCode(Enum):
     LOAD_GLOBAL = auto()
     LOAD_MEM = auto()
     LOAD_FUNC_ADDR = auto()
-    LOAD_NATIVE_FUNC_ADDR = auto()
 
     POP = auto()
     STORE_LOCAL = auto()
@@ -51,7 +50,6 @@ class OpCode(Enum):
     COND_JUMP = auto()
     CALL = auto()
     INDIRECT_CALL = auto()
-    NATIVE_CALL = auto()
     RET = auto()
 
 class _Instruction(ABC):
@@ -81,14 +79,6 @@ class LOAD_FUNC_ADDR(_Instruction):
     @property
     def opcode(self) -> OpCode:
         return OpCode.LOAD_FUNC_ADDR
-
-@dataclass(frozen=True)
-class LOAD_NATIVE_FUNC_ADDR(_Instruction):
-    func_name : str
-
-    @property
-    def opcode(self) -> OpCode:
-        return OpCode.LOAD_NATIVE_FUNC_ADDR
 
 @dataclass(frozen=True)
 class LOAD_LOCAL(_Instruction):
@@ -341,6 +331,8 @@ class COND_JUMP(_Instruction):
 @dataclass(frozen=True)
 class CALL(_Instruction):
     target : str
+    num_params : uint
+    returns_value : bool
     
     @property
     def opcode(self) -> OpCode:
@@ -348,19 +340,12 @@ class CALL(_Instruction):
 
 @dataclass(frozen=True)
 class INDIRECT_CALL(_Instruction):
+    num_params : uint
+    returns_value : bool
+
     @property
     def opcode(self) -> OpCode:
         return OpCode.INDIRECT_CALL
-
-@dataclass(frozen=True)
-class NATIVE_CALL(_Instruction):
-    target : str
-    num_params : uint
-    returns_value : bool
-    
-    @property
-    def opcode(self) -> OpCode:
-        return OpCode.NATIVE_CALL
 
 @dataclass(frozen=True)
 class RET(_Instruction):
@@ -406,6 +391,5 @@ Instruction = Union[
     COND_JUMP,
     CALL,
     INDIRECT_CALL,
-    NATIVE_CALL,
     RET
 ]

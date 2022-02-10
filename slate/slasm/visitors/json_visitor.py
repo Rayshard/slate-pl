@@ -1,7 +1,7 @@
 import json
 from typing import Any, Callable, Dict
 from slate.slasm.function import Function
-from slate.slasm.instruction import ADD, DIV, LOAD_CONST, LOAD_FUNC_ADDR, LOAD_GLOBAL, LOAD_LOCAL, LOAD_MEM, LOAD_PARAM, MOD, MUL, NATIVE_CALL, NOOP, POP, RET, STORE_GLOBAL, STORE_LOCAL, STORE_MEM, STORE_PARAM, SUB, Instruction, OpCode
+from slate.slasm.instruction import *
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION
 
@@ -11,7 +11,7 @@ def __emit_NOOP(instr: NOOP) -> Any:
 def __emit_LOAD_CONST(instr: LOAD_CONST) -> Any:
     return {"opcode": instr.opcode.name, "value": instr.value.as_hex()}
 
-def __emit_NATIVE_CALL(instr: NATIVE_CALL) -> Any:
+def __emit_CALL(instr: CALL) -> Any:
     return {"opcode": instr.opcode.name, "target": instr.target, "num_params": instr.num_params, "returns_value": instr.returns_value}
 
 def __emit_RET(instr: RET) -> Any:
@@ -20,7 +20,7 @@ def __emit_RET(instr: RET) -> Any:
 __TRANSLATORS : Dict[Any, Callable[..., Any]] = {
     OpCode.NOOP: __emit_NOOP,
     OpCode.LOAD_CONST: __emit_LOAD_CONST,
-    OpCode.NATIVE_CALL: __emit_NATIVE_CALL,
+    OpCode.CALL: __emit_CALL,
     OpCode.RET: __emit_RET,
 }
 
@@ -55,7 +55,7 @@ def load_Program(json_value: Any) -> Program:
 
     program = Program(json_value["target"])
 
-    for item in program["code"]["functions"].values():
+    for item in json_value["code"]["functions"].values():
         pass
 
     program.entry = json_value["code"]["entry"]

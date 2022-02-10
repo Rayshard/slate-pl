@@ -7,6 +7,7 @@
 - Game of Life
 
 # Slasm
+- remove num_params and returns_value from CALL instruction and add that info to global/func ctx
 - implement json loader
 - create tests for each instruction
   - basically loading them from json

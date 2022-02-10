@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict
 from slate.slasm.function import Function
-from slate.slasm.instruction import ADD, DIV, LOAD_CONST, LOAD_FUNC_ADDR, LOAD_GLOBAL, LOAD_LOCAL, LOAD_MEM, LOAD_PARAM, MOD, MUL, NATIVE_CALL, NOOP, POP, RET, STORE_GLOBAL, STORE_LOCAL, STORE_MEM, STORE_PARAM, SUB, Instruction, OpCode
+from slate.slasm.instruction import *
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION, DataType, Word
 
@@ -278,8 +278,8 @@ def __emit_MOD(instr: MOD, ctx: FunctionContext) -> str:
     string += "push rax"
     return string
 
-def __emit_NATIVE_CALL(instr: NATIVE_CALL, ctx: FunctionContext) -> str:
-    string = f"; NATIVE CALL\n" \
+def __emit_CALL(instr: CALL, ctx: FunctionContext) -> str:
+    string = f"; CALL\n" \
              f"call {instr.target}\n"
 
     if instr.num_params != 0:
@@ -317,7 +317,7 @@ __INSTRUCTION_TRANSLATORS : Dict[OpCode, Callable[..., str]] = {
     OpCode.MUL: __emit_MUL,
     OpCode.DIV: __emit_DIV,
     OpCode.MOD: __emit_MOD,
-    OpCode.NATIVE_CALL: __emit_NATIVE_CALL,
+    OpCode.CALL: __emit_CALL,
     OpCode.RET: __emit_RET,
 }
 

@@ -17,8 +17,8 @@
                             "value": "0x000000000000007b"
                         },
                         {
-                            "opcode": "NATIVE_CALL",
-                            "target": "print_i64",
+                            "opcode": "CALL",
+                            "target": "DEBUG_PRINT_I64",
                             "num_params": 1,
                             "returns_value": false
                         },

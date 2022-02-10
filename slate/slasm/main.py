@@ -16,7 +16,7 @@ def main():
     # basic_block.append_instr(instruction.LoadConst(Word.FromUI64(0x2000001)))
     # basic_block.append_instr(instruction.NativeCall("LINUX_x86_64_SYSCALL1", 2, False))
     basic_block.append_instr(instruction.LOAD_CONST(Word.FromI64(123)))
-    basic_block.append_instr(instruction.NATIVE_CALL("print_i64", 1, False))
+    basic_block.append_instr(instruction.CALL("DEBUG_PRINT_I64", 1, False))
     basic_block.append_instr(instruction.LOAD_CONST(Word.FromUI64(64)))
     basic_block.append_instr(instruction.RET())
 

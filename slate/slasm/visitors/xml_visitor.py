@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 from typing import Any, Callable, Dict
 from slate.slasm.function import Function
-from slate.slasm.instruction import ADD, DIV, LOAD_CONST, LOAD_FUNC_ADDR, LOAD_GLOBAL, LOAD_LOCAL, LOAD_MEM, LOAD_PARAM, MOD, MUL, NATIVE_CALL, NOOP, POP, RET, STORE_GLOBAL, STORE_LOCAL, STORE_MEM, STORE_PARAM, SUB, Instruction, OpCode
+from slate.slasm.instruction import *
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION, DataType, Word
 
@@ -57,8 +57,8 @@ def __emit_DIV(instr: DIV) -> ET.Element:
 def __emit_MOD(instr: MOD) -> ET.Element:
     return ET.Element("MOD", {"type": str(instr.data_type.name)})
 
-def __emit_NATIVE_CALL(instr: NATIVE_CALL) -> ET.Element:
-    return ET.Element("NATIVE_CALL", {"target": instr.target, "num_params": str(instr.num_params), "returns_value": str(instr.returns_value)})
+def __emit_CALL(instr: CALL) -> ET.Element:
+    return ET.Element("CALL", {"target": instr.target, "num_params": str(instr.num_params), "returns_value": str(instr.returns_value)})
 
 def __emit_RET(instr: RET) -> ET.Element:
     return ET.Element("RET")
@@ -80,7 +80,7 @@ __TRANSLATORS : Dict[Any, Callable[..., ET.Element]] = {
     OpCode.MUL: __emit_MUL,
     OpCode.DIV: __emit_DIV,
     OpCode.MOD: __emit_MOD,
-    OpCode.NATIVE_CALL: __emit_NATIVE_CALL,
+    OpCode.CALL: __emit_CALL,
     OpCode.RET: __emit_RET,
     OpCode.LOAD_FUNC_ADDR: __emit_LOAD_FUNC_ADDR,
 }

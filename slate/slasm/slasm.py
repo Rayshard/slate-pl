@@ -29,7 +29,7 @@ class Word:
         return "0x" + (self.bytes.hex() if endianness == 'little' else self.bytes[::-1].hex())
 
     def as_i64(self) -> i64:
-        return i64.from_bytes(self.bytes, 'little', signed=True)
+        return i64(int.from_bytes(self.bytes, 'little', signed=True))
 
     def as_ui64(self) -> int:
         return ui64.from_bytes(self.bytes, 'little', signed=False)
