@@ -18,9 +18,7 @@
                         },
                         {
                             "opcode": "CALL",
-                            "target": "DEBUG_PRINT_I64",
-                            "num_params": 1,
-                            "returns_value": false
+                            "target": "DEBUG_PRINT_I64"
                         },
                         {
                             "opcode": "LOAD_CONST",

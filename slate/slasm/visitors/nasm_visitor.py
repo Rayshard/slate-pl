@@ -1,16 +1,41 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, NamedTuple
 from slate.slasm.function import Function
 from slate.slasm.instruction import *
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION, DataType, Word
 
+class GlobalContext:
+    FuncDef = NamedTuple('FuncDef', [('num_params', int), ('returns_value', bool)])
+
+    def __init__(self, func_defs: Dict[str, FuncDef]) -> None:
+        self.__func_defs = func_defs
+
+    def get_function(self, name: str) -> FuncDef:
+        if name not in self.__func_defs:
+            raise Exception(f"Global Context does not contain a function named {name}")
+        
+        return self.__func_defs[name] 
+
 class FunctionContext:
-    def __init__(self, returns_value: bool) -> None:
-        self.__returns_value = returns_value
+    def __init__(self, func_name: str, global_ctx: GlobalContext) -> None:
+        self.__func_name = func_name
+        self.__global_ctx = global_ctx
+
+    @property
+    def func_name(self) -> str:
+        return self.__func_name
+
+    @property
+    def global_ctx(self) -> GlobalContext:
+        return self.__global_ctx
 
     @property
     def returns_value(self) -> bool:
-        return self.__returns_value
+        return self.global_ctx.get_function(self.func_name).returns_value
+
+    @property
+    def num_params(self) -> int:
+        return self.global_ctx.get_function(self.func_name).num_params
 
 def __emit_NOOP(instr: NOOP, ctx: FunctionContext) -> str:
     return "; NOOP\n" \
@@ -282,10 +307,12 @@ def __emit_CALL(instr: CALL, ctx: FunctionContext) -> str:
     string = f"; CALL\n" \
              f"call {instr.target}\n"
 
-    if instr.num_params != 0:
-        string += f"add rsp, {instr.num_params * Word.SIZE()} ; remove arguments from stack"
+    target_func_def = ctx.global_ctx.get_function(instr.target)
+
+    if target_func_def.num_params != 0:
+        string += f"add rsp, {target_func_def.num_params * Word.SIZE()} ; remove arguments from stack"
         
-    if instr.returns_value:
+    if target_func_def.returns_value:
         string += "push rax ; push return value"
     
     return string
@@ -327,20 +354,20 @@ def emit_Instruction(instr: Instruction, ctx: FunctionContext) -> str:
 
     return __INSTRUCTION_TRANSLATORS[instr.opcode](instr, ctx)
 
-def emit_Function(function: Function) -> str:
-    ctx = FunctionContext(function.returns_value)
+def emit_Function(function: Function, ctx: GlobalContext) -> str:
+    func_ctx = FunctionContext(function.name, ctx)
     string = f"{function.name}:"
 
     for label, bb in function.basic_blocks:
         string += f"\n  .{label}:"
 
         for instr in bb:
-            nasm = emit_Instruction(instr, ctx).replace('\n', '\n    ')
+            nasm = emit_Instruction(instr, func_ctx).replace('\n', '\n    ')
             string += f"\n    {nasm}"
 
     return string
 
-def emit_Program(program: Program, template: str) -> str:
+def emit_Program(program: Program, template: str, native_funcs: Dict[str, GlobalContext.FuncDef]) -> str:
     string = template
 
     assert "#SLASM_VERSION#" in template
@@ -352,7 +379,18 @@ def emit_Program(program: Program, template: str) -> str:
     assert "#ENTRY_FUNC_NAME#" in template
     string = string.replace("#ENTRY_FUNC_NAME#", program.entry)
 
+    # Get function forward declarations
+    func_defs = dict(native_funcs)
+
+    for function in program.functions:
+        if function.name in func_defs:
+            raise Exception(f"Function with name {function.name} is already declared as a native function!")
+
+        func_defs[function.name] = GlobalContext.FuncDef(function.num_params, function.returns_value)
+        
+    global_ctx = GlobalContext(func_defs)
+
     assert "#SLASM_FUNCS#" in template
-    string = string.replace("#SLASM_FUNCS#", '\n'.join([emit_Function(f) for f in program.functions]))
+    string = string.replace("#SLASM_FUNCS#", '\n'.join([emit_Function(f, global_ctx) for f in program.functions]))
 
     return string

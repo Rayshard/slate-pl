@@ -3,9 +3,29 @@
 
 [BITS 64]
 
-    extern _printf
+extern _printf
 
-    global _main
+%macro LINUX_x86_64_SYSCALL1 0
+    mov rax, [rsp + 8]  ; set syscall code
+    mov rdi, [rsp + 16] ; set first argument
+    syscall             ; perform syscall
+    ret                 ; return
+%endmacro
+
+%macro C_CALL_3 0
+    push rbp                ; store old base pointer
+    mov rbp, rsp            ; set new base pointer
+    mov rsi, [rbp + 40]     ; set third argument
+    mov rdi, [rbp + 32]     ; set second argument
+    mov rax, [rbp + 24]     ; set first argument
+    and  rsp, -16           ; align stack to 16-byte boundary
+    call [rbp + 16]         ; perform C function call        
+    mov rsp, rbp            ; clean up stack
+    pop rbp                 ; restore old base pointer
+    ret                     ; return
+%endmacro
+
+global _main
 
     section .text
     default rel
@@ -25,23 +45,10 @@ _main:
     ; return (note that rax already contains the exit code from previous call instruction)
     ret
 
-LINUX_x86_64_SYSCALL1:
-    mov rax, [rsp + 8]  ; set syscall code
-    mov rdi, [rsp + 16] ; set first argument
-    syscall             ; perform syscall
-    ret                 ; return
-
-C_FUNC_3:
-    push rbp                ; store old base pointer
-    mov rbp, rsp            ; set new base pointer
-    mov rsi, [rbp + 40]     ; set third argument
-    mov rdi, [rbp + 32]     ; set second argument
-    mov rax, [rbp + 24]     ; set first argument
-    and  rsp, -16           ; align stack to 16-byte boundary
-    call [rbp + 16]         ; perform C function call        
-    mov rsp, rbp            ; clean up stack
-    pop rbp                 ; restore old base pointer
-    ret                     ; return
+LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
+LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
+C_CALL_3_WITH_RET: C_CALL_3
+C_CALL_3_NO_RET: C_CALL_3
 
 DEBUG_PRINT_I64:
     ; arg4 (number)
@@ -60,9 +67,9 @@ DEBUG_PRINT_I64:
     push QWORD [rax]                    ; deference pointer
 
     ; perform call
-    call C_FUNC_3
+    call C_CALL_3_NO_RET
 
-    ; removed aruments
+    ; remove aruments
     add rsp, 32
 
     ; return

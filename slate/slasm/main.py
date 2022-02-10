@@ -16,7 +16,7 @@ def main():
     # basic_block.append_instr(instruction.LoadConst(Word.FromUI64(0x2000001)))
     # basic_block.append_instr(instruction.NativeCall("LINUX_x86_64_SYSCALL1", 2, False))
     basic_block.append_instr(instruction.LOAD_CONST(Word.FromI64(123)))
-    basic_block.append_instr(instruction.CALL("DEBUG_PRINT_I64", 1, False))
+    basic_block.append_instr(instruction.CALL("DEBUG_PRINT_I64"))
     basic_block.append_instr(instruction.LOAD_CONST(Word.FromUI64(64)))
     basic_block.append_instr(instruction.RET())
 
@@ -35,8 +35,16 @@ def main():
     with open('slate/slasm/nasm_template.asm', 'r') as template_file:
         template = template_file.read()
 
+        native_funcs = {
+            "LINUX_x86_64_SYSCALL1_WITH_RET": nasm_visitor.GlobalContext.FuncDef(2, True),
+            "LINUX_x86_64_SYSCALL1_NO_RET": nasm_visitor.GlobalContext.FuncDef(2, False),
+            "C_CALL_3_WITH_RET": nasm_visitor.GlobalContext.FuncDef(4, True),
+            "C_CALL_3_NO_RET": nasm_visitor.GlobalContext.FuncDef(4, False),
+            "DEBUG_PRINT_I64": nasm_visitor.GlobalContext.FuncDef(1, False),
+        }
+
         with open('tests/test.asm', 'w') as file:
-            file.write(nasm_visitor.emit_Program(program, template))
+            file.write(nasm_visitor.emit_Program(program, template, native_funcs))
 
     # with open('tests/test.ll', 'w') as file:
     #     def append_LINUX_x86_64_SYSCALL1(llvm_module: ir.Module) -> None:

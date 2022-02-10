@@ -58,7 +58,7 @@ def __emit_MOD(instr: MOD) -> ET.Element:
     return ET.Element("MOD", {"type": str(instr.data_type.name)})
 
 def __emit_CALL(instr: CALL) -> ET.Element:
-    return ET.Element("CALL", {"target": instr.target, "num_params": str(instr.num_params), "returns_value": str(instr.returns_value)})
+    return ET.Element("CALL", {"target": instr.target})
 
 def __emit_RET(instr: RET) -> ET.Element:
     return ET.Element("RET")

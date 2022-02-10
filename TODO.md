@@ -8,6 +8,8 @@
 
 # Slasm
 - remove num_params and returns_value from CALL instruction and add that info to global/func ctx
+- Is nasm, you have to save rdi, rsi and possible others because they are caller saved
+- Rewrite DEBUG_PRINT_I64 as code rather than being in the template
 - implement json loader
 - create tests for each instruction
   - basically loading them from json

@@ -331,8 +331,6 @@ class COND_JUMP(_Instruction):
 @dataclass(frozen=True)
 class CALL(_Instruction):
     target : str
-    num_params : uint
-    returns_value : bool
     
     @property
     def opcode(self) -> OpCode:

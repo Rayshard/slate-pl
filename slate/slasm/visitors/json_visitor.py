@@ -15,7 +15,7 @@ def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR) -> Any:
     return {"opcode": instr.opcode.name, "func_name": instr.func_name}
 
 def __emit_CALL(instr: CALL) -> Any:
-    return {"opcode": instr.opcode.name, "target": instr.target, "num_params": instr.num_params, "returns_value": instr.returns_value}
+    return {"opcode": instr.opcode.name, "target": instr.target}
 
 def __emit_RET(instr: RET) -> Any:
     return {"opcode": instr.opcode.name}

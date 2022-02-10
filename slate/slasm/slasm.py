@@ -32,7 +32,7 @@ class Word:
         return i64(int.from_bytes(self.bytes, 'little', signed=True))
 
     def as_ui64(self) -> int:
-        return ui64.from_bytes(self.bytes, 'little', signed=False)
+        return ui64(int.from_bytes(self.bytes, 'little', signed=False))
 
     @staticmethod
     def FromI64(value: i64) -> 'Word':
