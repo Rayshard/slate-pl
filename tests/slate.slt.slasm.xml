@@ -3,7 +3,19 @@
     <code entry="Main">
         <function name="Main" params="0" locals="0" returns_value="true" entry="entry">
             <BasicBlock label="entry">
-                <LOAD_CONST value="0x000000000000007b"/>
+                <LOAD_CONST value="0x0000000000000001"/>
+                <LOAD_CONST value="0x0000000000000002"/>
+                <ADD type="I64"/>
+                <LOAD_CONST value="0x0000000000000003"/>
+                <SUB type="I64"/>
+                <LOAD_CONST value="0x0000000000000004"/>
+                <LOAD_CONST value="0x0000000000000005"/>
+                <MUL type="I64"/>
+                <ADD type="I64"/>
+                <LOAD_CONST value="0x0000000000000004"/>
+                <ADD type="I64"/>
+                <LOAD_CONST value="0x0000000000000006"/>
+                <DIV type="I64"/>
                 <CALL target="DEBUG_PRINT_I64"/>
                 <LOAD_CONST value="0x0000000000000023"/>
                 <RET/>

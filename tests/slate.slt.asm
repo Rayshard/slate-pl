@@ -80,8 +80,57 @@ DEBUG_PRINT_I64:
 
 Main:
   .entry:
-    ; LOAD_CONST 0x000000000000007b
-    mov rax, 0x000000000000007b
+    ; LOAD_CONST 0x0000000000000001
+    mov rax, 0x0000000000000001
+    push rax
+    ; LOAD_CONST 0x0000000000000002
+    mov rax, 0x0000000000000002
+    push rax
+    ; ADD I64
+    pop rbx
+    pop rax
+    add rax, rbx
+    push rax
+    ; LOAD_CONST 0x0000000000000003
+    mov rax, 0x0000000000000003
+    push rax
+    ; SUB I64
+    pop rbx
+    pop rax
+    sub rax, rbx
+    push rax
+    ; LOAD_CONST 0x0000000000000004
+    mov rax, 0x0000000000000004
+    push rax
+    ; LOAD_CONST 0x0000000000000005
+    mov rax, 0x0000000000000005
+    push rax
+    ; MUL I64
+    pop rbx
+    pop rax
+    imul rax, rbx
+    push rax
+    ; ADD I64
+    pop rbx
+    pop rax
+    add rax, rbx
+    push rax
+    ; LOAD_CONST 0x0000000000000004
+    mov rax, 0x0000000000000004
+    push rax
+    ; ADD I64
+    pop rbx
+    pop rax
+    add rax, rbx
+    push rax
+    ; LOAD_CONST 0x0000000000000006
+    mov rax, 0x0000000000000006
+    push rax
+    ; DIV I64
+    pop rbx
+    pop rax
+    cqo
+    idiv rbx
     push rax
     ; CALL
     call DEBUG_PRINT_I64

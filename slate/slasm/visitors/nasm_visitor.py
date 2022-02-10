@@ -98,8 +98,8 @@ def __emit_POP(instr: POP, ctx: FunctionContext) -> str:
 def __emit_ADD(instr: ADD, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; ADD {dt.name}\n" \
-              "pop rax\n" \
-              "pop rbx\n"
+              "pop rbx\n" \
+              "pop rax\n"
                 
     if dt == DataType.I8 or dt == DataType.UI8:
         string += "add al, bl\n"
@@ -128,8 +128,8 @@ def __emit_ADD(instr: ADD, ctx: FunctionContext) -> str:
 def __emit_SUB(instr: SUB, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; SUB {dt.name}\n" \
-              "pop rax\n" \
-              "pop rbx\n"
+              "pop rbx\n" \
+              "pop rax\n"
                 
     if dt == DataType.I8 or dt == DataType.UI8:
         string += "sub al, bl\n"
@@ -158,8 +158,8 @@ def __emit_SUB(instr: SUB, ctx: FunctionContext) -> str:
 def __emit_MUL(instr: MUL, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; MUL {dt.name}\n" \
-              "pop rax\n" \
-              "pop rbx\n"
+              "pop rbx\n" \
+              "pop rax\n"
                 
     if dt == DataType.I8 or dt == DataType.UI8:
         string += "imul al, bl\n"
@@ -188,8 +188,8 @@ def __emit_MUL(instr: MUL, ctx: FunctionContext) -> str:
 def __emit_DIV(instr: DIV, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; DIV {dt.name}\n" \
+              "pop rbx\n" \
               "pop rax\n" \
-              "pop rbx\n"
                 
     if dt == DataType.I8:
         string += "movsx eax, eax\n" \
@@ -238,8 +238,8 @@ def __emit_DIV(instr: DIV, ctx: FunctionContext) -> str:
 def __emit_MOD(instr: MOD, ctx: FunctionContext) -> str:
     dt = instr.data_type
     string = f"; MOD {dt.name}\n" \
+              "pop rbx\n" \
               "pop rax\n" \
-              "pop rbx\n"
                 
     if dt == DataType.I8:
         string += "movsx eax, eax\n" \
