@@ -8,7 +8,6 @@ def VERSION() -> str:
     return "1.0"
 
 class DataType(Enum):
-    UNDEFINED = auto()
     I8 = auto()
     UI8 = auto()
     I16 = auto()

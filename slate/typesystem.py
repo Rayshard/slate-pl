@@ -17,6 +17,10 @@ class SlateType(ABC):
         return self.__byte_size
 
     @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+    @abstractmethod
     def same_as(self, other: 'SlateType') -> bool:
         pass
 

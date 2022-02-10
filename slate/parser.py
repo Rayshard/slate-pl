@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-from slate.ast import ASTBinopExpr, ASTExpr, ASTIntegerLiteral, ASTModule, ASTVarDecl, Binop
+from slate.ast import ASTBinopExpr, ASTExpr, ASTIntegerLiteral, ASTModule, ASTNode, ASTVarDecl, Binop
 from slate.lexer import Token, TokenID, TokenStream
 from slate.utilities import Location, Position
 
@@ -85,7 +85,8 @@ def __TOKEN(stream: TokenStream, id: TokenID, value: Optional[str] = None) -> To
     token = stream.get()
 
     if token.id != id or (value is not None and token.value != value):
-        raise ParseError.Expectation(f"{id.name}({value})", f"{token.id.name}({token.value})", location)
+        expected = id.name + (f"({value})" if value is not None else "")
+        raise ParseError.Expectation(expected, f"{token.id.name}({token.value})", location)
 
     return token
 
@@ -104,19 +105,19 @@ def __BINOP(stream: TokenStream) -> __BinopToken:
 
     raise ParseError.Expectation("Binary Operator", f"{token.id.name}({token.value})", location)
 
-def __LPAREN(stream: TokenStream) -> None:
+def __LPAREN(stream: TokenStream) -> Token:
     return __TOKEN(stream, TokenID.SYMBOL, "(")
 
-def __RPAREN(stream: TokenStream) -> None:
+def __RPAREN(stream: TokenStream) -> Token:
     return __TOKEN(stream, TokenID.SYMBOL, ")")
 
-def __EQUALS(stream: TokenStream) -> None:
+def __EQUALS(stream: TokenStream) -> Token:
     return __TOKEN(stream, TokenID.SYMBOL, "=")
 
-def __SEMICOLON(stream: TokenStream) -> None:
+def __SEMICOLON(stream: TokenStream) -> Token:
     return __TOKEN(stream, TokenID.SYMBOL, ";")
 
-def __KW_LET(stream: TokenStream) -> None:
+def __KW_LET(stream: TokenStream) -> Token:
     return __TOKEN(stream, TokenID.KEYWORD, "let")
 
 def __ID(stream: TokenStream) -> Token:
@@ -187,7 +188,25 @@ def __VarDecl(stream: TokenStream) -> ASTVarDecl:
 
 def __Module(stream: TokenStream, path: str) -> ASTModule:
     __OptWS(stream)
-    return ASTModule(path, [__VarDecl(stream)])
+
+    nodes : List[ASTNode] = []
+
+    while stream.peek().id != TokenID.EOS:
+        try:
+            nodes.append(__Expr(stream))
+            continue
+        except ParseError:
+            pass
+
+        try:
+            nodes.append(__VarDecl(stream))
+            continue
+        except ParseError:
+            pass
+
+        raise ParseError(stream.get_location(), "Unknown ast node")
+
+    return ASTModule(path, nodes)
 
 def parse_file(path: Path, context: Context):
     posix_path = path.as_posix()

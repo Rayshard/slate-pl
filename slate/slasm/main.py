@@ -17,7 +17,7 @@ def main():
     # basic_block.append_instr(instruction.NativeCall("LINUX_x86_64_SYSCALL1", 2, False))
     basic_block.append_instr(instruction.LOAD_CONST(Word.FromI64(123)))
     basic_block.append_instr(instruction.CALL("DEBUG_PRINT_I64"))
-    basic_block.append_instr(instruction.LOAD_CONST(Word.FromUI64(64)))
+    basic_block.append_instr(instruction.LOAD_CONST(Word.FromI64(64)))
     basic_block.append_instr(instruction.RET())
 
     function.add_basic_block("entry", basic_block)
