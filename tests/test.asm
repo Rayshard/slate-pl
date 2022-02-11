@@ -25,10 +25,23 @@ extern _printf
     ret                     ; return
 %endmacro
 
-global _main
+    section .data
+DATA_my_string: db 72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33, 0, 0, 0
+
+    section .bss
+GLOBAL_1: resb 8
+GLOBAL_3: resb 8
+GLOBAL_2: resb 8
 
     section .text
+    
     default rel
+    global _main
+
+LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
+LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
+C_CALL_3_WITH_RET: C_CALL_3
+C_CALL_3_NO_RET: C_CALL_3
 
 _main:
     ; create stack frame
@@ -36,7 +49,7 @@ _main:
     mov rbp, rsp
 
     ; call entry function
-    call SLASM_Main
+    call FUNCTION_Main
 
     ; delete stack frame
     mov rsp, rbp
@@ -44,11 +57,6 @@ _main:
 
     ; return (note that rax already contains the exit code from previous call instruction)
     ret
-
-LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
-LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
-C_CALL_3_WITH_RET: C_CALL_3
-C_CALL_3_NO_RET: C_CALL_3
 
 DEBUG_PRINT_I64:
     ; arg4 (number)
@@ -78,7 +86,7 @@ DEBUG_PRINT_I64:
     ; LOCAL READONLY VARIABLES
     .fmt: db "%lli", 0x0A, 0
 
-SLASM_Main:
+FUNCTION_Main:
   .entry:
     ; LOAD_CONST 0x000000000000007b
     mov rax, 0x000000000000007b

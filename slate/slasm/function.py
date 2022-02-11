@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from slate.slasm.instruction import Instruction, OpCode
 
@@ -28,10 +28,10 @@ class BasicBlock:
         return self.__instructions[idx]
 
 class Function:
-    def __init__(self, name: str, num_params: int, num_locals: int, returns_value: bool) -> None:
+    def __init__(self, name: str, params: Set[str], locals: Set[str], returns_value: bool) -> None:
         self.__name = name
-        self.__num_params = num_params
-        self.__num_locals = num_locals
+        self.__params = set(params)
+        self.__locals = set(locals)
         self.__returns_value = returns_value
         self.__basic_blocks : Dict[str, BasicBlock] = {}
         self.__entry : Optional[str] = None
@@ -51,11 +51,11 @@ class Function:
 
     @property
     def num_params(self) -> int:
-        return self.__num_params
+        return len(self.__params)
 
     @property
     def num_locals(self) -> int:
-        return self.__num_locals
+        return len(self.__locals)
 
     @property
     def returns_value(self) -> bool:
@@ -78,3 +78,11 @@ class Function:
     @property
     def basic_blocks(self) -> List[Tuple[str, BasicBlock]]:
         return list(self.__basic_blocks.items())
+
+    @property
+    def params(self) -> Set[str]:
+        return set(self.__params)
+
+    @property
+    def locals(self) -> Set[str]:
+        return set(self.__locals)

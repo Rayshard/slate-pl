@@ -1,13 +1,20 @@
 <?xml version="1.0" ?>
-<program slasm_version="1.0" target="x86-64-linux-nasm">
-    <code entry="SLASM_Main">
-        <function name="SLASM_Main" params="0" locals="0" returns_value="true" entry="entry">
-            <BasicBlock label="entry">
-                <LOAD_CONST value="0x000000000000007b"/>
-                <CALL target="DEBUG_PRINT_I64"/>
-                <LOAD_CONST value="0x0000000000000040"/>
-                <RET/>
-            </BasicBlock>
-        </function>
-    </code>
+<program slasm_version="1.0" target="x86-64-linux-nasm" entry="FUNCTION_Main">
+    <global name="GLOBAL_1"/>
+    <global name="GLOBAL_3"/>
+    <global name="GLOBAL_2"/>
+    <function name="FUNCTION_Main" returns_value="true" entry="entry">
+        <param name="p2"/>
+        <param name="p1"/>
+        <param name="p0"/>
+        <local name="l3"/>
+        <local name="l2"/>
+        <local name="l1"/>
+        <basic_block label="entry">
+            <LOAD_CONST value="0x000000000000007b"/>
+            <CALL target="DEBUG_PRINT_I64"/>
+            <LOAD_CONST value="0x0000000000000040"/>
+            <RET/>
+        </basic_block>
+    </function>
 </program>

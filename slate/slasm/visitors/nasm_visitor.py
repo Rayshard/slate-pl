@@ -1,11 +1,11 @@
-from typing import Any, Callable, Dict, NamedTuple
+from typing import Any, Callable, Dict, List, NamedTuple, Set
 from slate.slasm.function import Function
 from slate.slasm.instruction import *
 from slate.slasm.program import Program
 from slate.slasm.slasm import VERSION, DataType, Word
 
 class GlobalContext:
-    FuncDef = NamedTuple('FuncDef', [('num_params', int), ('returns_value', bool)])
+    FuncDef = NamedTuple('FuncDef', [('params', List[str]), ('locals', List[str]), ('returns_value', bool)])
 
     def __init__(self, func_defs: Dict[str, FuncDef]) -> None:
         self.__func_defs = func_defs
@@ -21,6 +21,12 @@ class FunctionContext:
         self.__func_name = func_name
         self.__global_ctx = global_ctx
 
+    def get_param_idx(self, name: str) -> int:
+        return self.global_ctx.get_function(self.func_name).params.index(name)
+
+    def get_local_idx(self, name: str) -> int:
+        return self.global_ctx.get_function(self.func_name).locals.index(name)
+
     @property
     def func_name(self) -> str:
         return self.__func_name
@@ -30,12 +36,16 @@ class FunctionContext:
         return self.__global_ctx
 
     @property
-    def returns_value(self) -> bool:
-        return self.global_ctx.get_function(self.func_name).returns_value
+    def num_params(self) -> int:
+        return len(self.global_ctx.get_function(self.func_name).params)
 
     @property
-    def num_params(self) -> int:
-        return self.global_ctx.get_function(self.func_name).num_params
+    def num_locals(self) -> int:
+        return len(self.global_ctx.get_function(self.func_name).locals)
+
+    @property
+    def returns_value(self) -> bool:
+        return self.global_ctx.get_function(self.func_name).returns_value
 
 def __emit_NOOP(instr: NOOP, ctx: FunctionContext) -> str:
     return "; NOOP\n" \
@@ -54,12 +64,12 @@ def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR, ctx: FunctionContext) -> str:
             "push rax"
 
 def __emit_LOAD_LOCAL(instr: LOAD_LOCAL, ctx: FunctionContext) -> str:
-    return f"; LOAD_LOCAL {instr.idx}\n" \
-           f"push qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
+    return f"; LOAD_LOCAL {instr.name}\n" \
+           f"push qword [rbp-{(ctx.get_local_idx(instr.name) + 1) * Word.SIZE()}]"
 
 def __emit_LOAD_PARAM(instr: LOAD_PARAM, ctx: FunctionContext) -> str:
-    return f"; LOAD_PARAM {instr.idx}\n" \
-           f"push qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
+    return f"; LOAD_PARAM {instr.name}\n" \
+           f"push qword [rbp+{(ctx.get_param_idx(instr.name) + 2) * Word.SIZE()}]"
 
 def __emit_LOAD_GLOBAL(instr: LOAD_GLOBAL, ctx: FunctionContext) -> str:
     return f"; LOAD_GLOBAL {instr.name}\n" \
@@ -73,12 +83,12 @@ def __emit_LOAD_MEM(instr: LOAD_MEM, ctx: FunctionContext) -> str:
            f"push qword [rax{sign}{abs(instr.offset)}]"
     
 def __emit_STORE_LOCAL(instr: STORE_LOCAL, ctx: FunctionContext) -> str:
-    return f"; STORE_LOCAL {instr.idx}\n" \
-           f"pop qword [rbp-{(instr.idx + 1) * Word.SIZE()}]"
+    return f"; STORE_LOCAL {instr.name}\n" \
+           f"pop qword [rbp-{(ctx.get_local_idx(instr.name) + 1) * Word.SIZE()}]"
 
 def __emit_STORE_PARAM(instr: STORE_PARAM, ctx: FunctionContext) -> str:
-    return f"; STORE_PARAM {instr.idx}\n" \
-           f"pop qword [rbp+{(instr.idx + 2) * Word.SIZE()}]"
+    return f"; STORE_PARAM {instr.name}\n" \
+           f"pop qword [rbp+{(ctx.get_param_idx(instr.name) + 2) * Word.SIZE()}]"
 
 def __emit_STORE_GLOBAL(instr: STORE_GLOBAL, ctx: FunctionContext) -> str:
     return f"; STORE_GLOBAL {instr.name}\n" \
@@ -308,9 +318,10 @@ def __emit_CALL(instr: CALL, ctx: FunctionContext) -> str:
              f"call {instr.target}\n"
 
     target_func_def = ctx.global_ctx.get_function(instr.target)
+    target_func_param_count = len(target_func_def.params)
 
-    if target_func_def.num_params != 0:
-        string += f"add rsp, {target_func_def.num_params * Word.SIZE()} ; remove arguments from stack"
+    if target_func_param_count != 0:
+        string += f"add rsp, {target_func_param_count * Word.SIZE()} ; remove arguments from stack"
         
     if target_func_def.returns_value:
         string += "push rax ; push return value"
@@ -376,6 +387,12 @@ def emit_Program(program: Program, template: str, native_funcs: Dict[str, Global
     assert "#TARGET#" in template
     string = string.replace("#TARGET#", program.target)
 
+    assert "#DATA#" in template
+    string = string.replace("#DATA#", '\n'.join([f"{label}: db {', '.join([str(int(byte)) for byte in bytes])}" for label, bytes in program.data]))
+
+    assert "#GLOBALS#" in template
+    string = string.replace("#GLOBALS#", '\n'.join([f"{name}: resb {Word.SIZE()}" for name in program.globals]))
+
     assert "#ENTRY_FUNC_NAME#" in template
     string = string.replace("#ENTRY_FUNC_NAME#", program.entry)
 
@@ -386,7 +403,7 @@ def emit_Program(program: Program, template: str, native_funcs: Dict[str, Global
         if function.name in func_defs:
             raise Exception(f"Function with name {function.name} is already declared as a native function!")
 
-        func_defs[function.name] = GlobalContext.FuncDef(function.num_params, function.returns_value)
+        func_defs[function.name] = GlobalContext.FuncDef(list(function.params), list(function.locals), function.returns_value)
         
     global_ctx = GlobalContext(func_defs)
 

@@ -53,7 +53,7 @@ def __visit_ASTNode(node: ASTNode, basic_block: BasicBlock, function: Function) 
 
 def visit(modules: List[ASTModule], target: str) -> Program:
     program = Program(target)
-    function = Function("Main", 0, 0, True)
+    function = Function("Main", set(), set(), True)
 
     basic_block = BasicBlock()
     

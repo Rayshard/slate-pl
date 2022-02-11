@@ -1,3 +1,4 @@
+import subprocess
 from textwrap import dedent
 from slate.slasm.function import BasicBlock, Function
 from slate.slasm.program import Program
@@ -8,8 +9,10 @@ from slate.slasm import instruction
 from llvmlite import ir # type: ignore
 
 def main():
-    program = Program(target="x86-64-linux-nasm")
-    function = Function("SLASM_Main", 0, 0, True)
+    program = Program("x86-64-linux-nasm", {"GLOBAL_1", "GLOBAL_2", "GLOBAL_3"})
+    program.add_data("DATA_my_string", b"Hello, World!\0")
+
+    function = Function("FUNCTION_Main", {"p0", "p1", "p2"}, {"l1", "l2", "l3"}, True)
 
     basic_block = BasicBlock()
     # basic_block.append_instr(instruction.LoadConst(Word.FromUI64(123)))
@@ -36,11 +39,11 @@ def main():
         template = template_file.read()
 
         native_funcs = {
-            "LINUX_x86_64_SYSCALL1_WITH_RET": nasm_visitor.GlobalContext.FuncDef(2, True),
-            "LINUX_x86_64_SYSCALL1_NO_RET": nasm_visitor.GlobalContext.FuncDef(2, False),
-            "C_CALL_3_WITH_RET": nasm_visitor.GlobalContext.FuncDef(4, True),
-            "C_CALL_3_NO_RET": nasm_visitor.GlobalContext.FuncDef(4, False),
-            "DEBUG_PRINT_I64": nasm_visitor.GlobalContext.FuncDef(1, False),
+            "LINUX_x86_64_SYSCALL1_WITH_RET": nasm_visitor.GlobalContext.FuncDef(["p0", "p1"], [], True),
+            "LINUX_x86_64_SYSCALL1_NO_RET": nasm_visitor.GlobalContext.FuncDef(["p0", "p1"], [], False),
+            "C_CALL_3_WITH_RET": nasm_visitor.GlobalContext.FuncDef(["p0", "p1", "p2", "p3"], [], True),
+            "C_CALL_3_NO_RET": nasm_visitor.GlobalContext.FuncDef(["p0", "p1", "p2", "p3"], [], False),
+            "DEBUG_PRINT_I64": nasm_visitor.GlobalContext.FuncDef(["p0"], [], False),
         }
 
         with open('tests/test.asm', 'w') as file:
@@ -70,8 +73,6 @@ def main():
     #     append_main(llvm_module)
 
     #     file.write(str(llvm_module))
-
-    import subprocess
 
     process = subprocess.run("nasm -f macho64 tests/test.asm && gcc -arch x86_64 -o tests/test tests/test.o && rm tests/test.o && ./tests/test", shell=True)
     print(f"{str(process.stdout)}\n{str(process.stderr)}\nExited with code {process.returncode}")

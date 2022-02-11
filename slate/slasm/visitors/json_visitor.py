@@ -36,10 +36,10 @@ def emit_Instruction(instr: Instruction) -> Any:
 def emit_Function(function: Function) -> Any:
     return {
         "name": function.name,
-        "params": function.num_params,
-        "locals": function.num_locals,
         "returns_value": function.returns_value,
         "entry": function.entry,
+        "params": list(function.params),
+        "locals": list(function.locals),
         "basic_blocks": {label:[emit_Instruction(instr) for instr in bb] for label, bb in function.basic_blocks}
     }
 
@@ -47,10 +47,9 @@ def emit_Program(program: Program) -> Any:
     return {
         "slasm_version": VERSION(),
         "target": program.target,
-        "code": {
-            "entry": program.entry,
-            "functions": {func.name:emit_Function(func) for func in program.functions}
-        }
+        "entry": program.entry,
+        "globals": list(program.globals),
+        "functions": {func.name:emit_Function(func) for func in program.functions}
     }
 
 def load_Program(json_value: Any) -> Program:
@@ -58,10 +57,13 @@ def load_Program(json_value: Any) -> Program:
 
     program = Program(json_value["target"])
 
-    for item in json_value["code"]["functions"].values():
+    for item in json_value["globals"].values():
         pass
 
-    program.entry = json_value["code"]["entry"]
+    for item in json_value["functions"].values():
+        pass
+
+    program.entry = json_value["entry"]
 
     return program
 

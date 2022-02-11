@@ -1,34 +1,45 @@
 {
     "slasm_version": "1.0",
     "target": "x86-64-linux-nasm",
-    "code": {
-        "entry": "SLASM_Main",
-        "functions": {
-            "SLASM_Main": {
-                "name": "SLASM_Main",
-                "params": 0,
-                "locals": 0,
-                "returns_value": true,
-                "entry": "entry",
-                "basic_blocks": {
-                    "entry": [
-                        {
-                            "opcode": "LOAD_CONST",
-                            "value": "0x000000000000007b"
-                        },
-                        {
-                            "opcode": "CALL",
-                            "target": "DEBUG_PRINT_I64"
-                        },
-                        {
-                            "opcode": "LOAD_CONST",
-                            "value": "0x0000000000000040"
-                        },
-                        {
-                            "opcode": "RET"
-                        }
-                    ]
-                }
+    "entry": "FUNCTION_Main",
+    "globals": [
+        "GLOBAL_1",
+        "GLOBAL_3",
+        "GLOBAL_2"
+    ],
+    "functions": {
+        "FUNCTION_Main": {
+            "name": "FUNCTION_Main",
+            "returns_value": true,
+            "entry": "entry",
+            "params": [
+                "p2",
+                "p1",
+                "p0"
+            ],
+            "locals": [
+                "l3",
+                "l2",
+                "l1"
+            ],
+            "basic_blocks": {
+                "entry": [
+                    {
+                        "opcode": "LOAD_CONST",
+                        "value": "0x000000000000007b"
+                    },
+                    {
+                        "opcode": "CALL",
+                        "target": "DEBUG_PRINT_I64"
+                    },
+                    {
+                        "opcode": "LOAD_CONST",
+                        "value": "0x0000000000000040"
+                    },
+                    {
+                        "opcode": "RET"
+                    }
+                ]
             }
         }
     }

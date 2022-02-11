@@ -25,10 +25,21 @@ extern _printf
     ret                     ; return
 %endmacro
 
-global _main
+    section .data
+#DATA#
+
+    section .bss
+#GLOBALS#
 
     section .text
+    
     default rel
+    global _main
+
+LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
+LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
+C_CALL_3_WITH_RET: C_CALL_3
+C_CALL_3_NO_RET: C_CALL_3
 
 _main:
     ; create stack frame
@@ -44,11 +55,6 @@ _main:
 
     ; return (note that rax already contains the exit code from previous call instruction)
     ret
-
-LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
-LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
-C_CALL_3_WITH_RET: C_CALL_3
-C_CALL_3_NO_RET: C_CALL_3
 
 DEBUG_PRINT_I64:
     ; arg4 (number)

@@ -82,7 +82,7 @@ class LOAD_FUNC_ADDR(_Instruction):
 
 @dataclass(frozen=True)
 class LOAD_LOCAL(_Instruction):
-    idx : ui64
+    name : str
 
     @property
     def opcode(self) -> OpCode:
@@ -90,7 +90,7 @@ class LOAD_LOCAL(_Instruction):
 
 @dataclass(frozen=True)
 class LOAD_PARAM(_Instruction):
-    idx : ui64
+    name : str
 
     @property
     def opcode(self) -> OpCode:
@@ -114,7 +114,7 @@ class LOAD_MEM(_Instruction):
 
 @dataclass(frozen=True)
 class STORE_LOCAL(_Instruction):
-    idx : ui64
+    name : str
 
     @property
     def opcode(self) -> OpCode:
@@ -122,7 +122,7 @@ class STORE_LOCAL(_Instruction):
 
 @dataclass(frozen=True)
 class STORE_PARAM(_Instruction):
-    idx : ui64
+    name : str
 
     @property
     def opcode(self) -> OpCode:

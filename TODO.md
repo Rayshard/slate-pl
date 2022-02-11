@@ -10,10 +10,11 @@
 - Game of Life
 
 # Slasm
-- Implement globals
-  - They can be readonly or writeable
-  - The program class should have an is_valid to make sure functions are sound and the instructions within them are sound
-    - e.g. you can't call a store_global on a readonly global
+- Slasm functions must have a prologue and epilogue bc LOAD_LOCAL and LOAD_PARAM rely on rbp
+- Remove globals
+  - Only use data
+  - loading a global is LOAD_DATA {name}, {offset}
+- The program class should have an is_valid to make sure functions are sound and the instructions within them are sound
 - Rewrite DEBUG_PRINT_I64 as code rather than being in the template
 - implement json loader
 - create tests for each instruction

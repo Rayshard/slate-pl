@@ -16,10 +16,10 @@ def __emit_LOAD_FUNC_ADDR(instr: LOAD_FUNC_ADDR) -> ET.Element:
     return ET.Element("LOAD_FUNC_ADDR", {"func_name": instr.func_name})
 
 def __emit_LOAD_LOCAL(instr: LOAD_LOCAL) -> ET.Element:
-    return ET.Element("LOAD_LOCAL", {"idx": str(instr.idx)})
+    return ET.Element("LOAD_LOCAL", {"name": instr.name})
 
 def __emit_LOAD_PARAM(instr: LOAD_PARAM) -> ET.Element:
-    return ET.Element("LOAD_PARAM", {"idx": str(instr.idx)})
+    return ET.Element("LOAD_PARAM", {"name": instr.name})
 
 def __emit_LOAD_GLOBAL(instr: LOAD_GLOBAL) -> ET.Element:
     return ET.Element("LOAD_GLOBAL", {"name": instr.name})
@@ -28,10 +28,10 @@ def __emit_LOAD_MEM(instr: LOAD_MEM) -> ET.Element:
     return ET.Element("LOAD_MEM", {"offset": str(instr.offset)})
     
 def __emit_STORE_LOCAL(instr: STORE_LOCAL) -> ET.Element:
-    return ET.Element("STORE_LOCAL", {"idx": str(instr.idx)})
+    return ET.Element("STORE_LOCAL", {"name": instr.name})
 
 def __emit_STORE_PARAM(instr: STORE_PARAM) -> ET.Element:
-    return ET.Element("STORE_PARAM", {"idx": str(instr.idx)})
+    return ET.Element("STORE_PARAM", {"name": instr.name})
 
 def __emit_STORE_GLOBAL(instr: STORE_GLOBAL) -> ET.Element:
     return ET.Element("STORE_GLOBAL", {"name": instr.name})
@@ -93,28 +93,37 @@ def emit_Instruction(instr: Instruction) -> ET.Element:
 
 def emit_Function(function: Function) -> ET.Element:
     element = ET.Element("function", {"name": function.name,
-                                      "params": str(function.num_params),
-                                      "locals": str(function.num_locals),
                                       "returns_value": str(function.returns_value).lower(),
                                       "entry": function.entry
                                       })
 
+    # Add params
+    for param in function.params:
+        element.append(ET.Element("param", {"name":param}))
+
+    # Add locals
+    for local in function.locals:
+        element.append(ET.Element("local", {"name":local}))
+
+    # Add basic blocks
     for label, bb in function.basic_blocks:
-        bb_elem = ET.Element("BasicBlock", {"label": label})
+        bb_elem = ET.SubElement(element, "basic_block", {"label": label})
         
         for instr in bb:
             bb_elem.append(emit_Instruction(instr))
 
-        element.append(bb_elem)
-
     return element
 
 def emit_Program(program: Program) -> ET.Element:
-    document = ET.Element("program", {"slasm_version": VERSION(), "target": program.target})
-    code = ET.SubElement(document, "code", {"entry": program.entry})
+    document = ET.Element("program", {"slasm_version": VERSION(), "target": program.target, "entry": program.entry})
 
+    # Add globals
+    for name in program.globals:
+        document.append(ET.Element("global", {"name":name}))
+
+    # Add functions
     for function in program.functions:
-        code.append(emit_Function(function))
+        document.append(emit_Function(function))
 
     return document
 
