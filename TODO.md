@@ -13,6 +13,9 @@
 - Slasm functions must have a prologue and epilogue bc LOAD_LOCAL and LOAD_PARAM rely on rbp
 - Remove globals
   - Only use data
+    - LOAD_DATA_ADDR {name}
+    - LOAD_DATA {name}, {offset}
+    - STORE_DATA {name}, {offset}
   - loading a global is LOAD_DATA {name}, {offset}
 - The program class should have an is_valid to make sure functions are sound and the instructions within them are sound
 - Rewrite DEBUG_PRINT_I64 as code rather than being in the template
