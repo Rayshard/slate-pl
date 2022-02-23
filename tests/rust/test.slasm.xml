@@ -2,10 +2,10 @@
 <program slasm_version="1.0.0" entry="Main">
   <data label="my_string" bytes="SGVsbG8sIFdvcmxkIQAAAA==" />
   <function name="Main" num_returns="1" entry="entry">
-    <param name="b" />
     <param name="a" />
-    <local name="d" />
+    <param name="b" />
     <local name="c" />
+    <local name="d" />
     <basic_block label="entry">
       <LOAD_CONST value="0x000000000000007B" />
       <Call target="DEBUG_PRINT_I64" />

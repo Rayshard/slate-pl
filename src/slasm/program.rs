@@ -13,29 +13,35 @@ impl Program {
         Program {
             data: HashMap::new(),
             functions: HashMap::new(),
-            entry: None
+            entry: None,
         }
     }
 
     pub fn add_function(&mut self, function: Function) {
-        if self.functions.contains_key(function.name()) {
-            panic!("Program already contains a function with name '{}'!", function.name());
-        }
+        assert!(
+            !self.functions.contains_key(function.name()),
+            "Program already contains a function with name '{}'!",
+            function.name()
+        );
 
         self.functions.insert(function.name().clone(), function);
     }
 
     pub fn add_data(&mut self, label: String, mut data: Vec<u8>) {
-        if self.data.contains_key(&label) {
-            panic!("Program already contains a data with label '{}'!", label);
-        }
+        assert!(
+            !self.data.contains_key(&label),
+            "Program already contains a data with label '{}'!",
+            label
+        );
 
-        data.extend(vec![0; (WORD_SIZE - data.len() % WORD_SIZE) % WORD_SIZE]); //Add padding if needed        
+        data.extend(vec![0; (WORD_SIZE - data.len() % WORD_SIZE) % WORD_SIZE]); //Add padding if needed
         self.data.insert(label, data);
     }
 
     pub fn contains_nonterminated_basic_block(&self) -> bool {
-        self.functions.values().any(|f| f.contains_nonterminated_basic_block())
+        self.functions
+            .values()
+            .any(|f| f.contains_nonterminated_basic_block())
     }
 
     pub fn data(&self) -> &HashMap<String, Vec<u8>> {
@@ -48,16 +54,18 @@ impl Program {
 
     pub fn entry(&self) -> &String {
         if let Some(name) = &self.entry {
-            return name
+            return name;
         }
 
         panic!("Program does not have a set entry!");
     }
 
     pub fn set_entry(&mut self, value: String) {
-        if !self.functions.contains_key(&value) {
-            panic!("Program does not contain a function with name '{}'!", value);
-        }
+        assert!(
+            self.functions.contains_key(&value),
+            "Program does not contain a function with name '{}'!",
+            value
+        );
 
         self.entry = Some(value);
     }

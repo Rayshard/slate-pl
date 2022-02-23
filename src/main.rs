@@ -1,4 +1,3 @@
-use std::fs;
 use crate::slasm::basic_block::BasicBlock;
 use crate::slasm::function::Function;
 use crate::slasm::instruction::Instruction;
@@ -9,7 +8,11 @@ use crate::slasm::visitors::xml;
 use ::xml::EmitterConfig;
 use std::collections::HashSet;
 use std::env;
+use std::fs;
 use std::fs::File;
+use std::path::{Path, PathBuf};
+use std::process;
+
 mod slasm;
 
 fn main() {
@@ -50,19 +53,65 @@ fn main() {
     xml::emit_program(&program, &mut xml_writer);
 
     // Emit nasm
-    fs::write("tests/rust/test.slasm.asm", nasm::emit_program(&program)).unwrap();
+    let asm_path = Path::new("tests/rust/test.asm");
+    fs::write(asm_path, nasm::emit_program(&program)).unwrap();
 
     // Compile
-    match env::consts::OS {
+    let mut bin_path: PathBuf;
+    let output = match env::consts::OS {
         "linux" => {
+            bin_path = asm_path.with_extension("");
+
             todo!("linux")
         }
         "macos" => {
-            todo!("macos")
+            bin_path = asm_path.with_extension("");
+
+            let obj_path = asm_path.with_extension("o");
+
+            process::Command::new("sh")
+                .arg("-c")
+                .arg(format!(
+                    "nasm -f macho64 {} && gcc -Wl,-no_pie -arch x86_64 -o {} {}",
+                    asm_path.to_str().unwrap(),
+                    bin_path.to_str().unwrap(),
+                    obj_path.to_str().unwrap()
+                ))
+                .output()
         }
         "windows" => {
+            bin_path = asm_path.with_extension("");
+
             todo!("windows")
         }
         os => panic!("Compilation to {} is not supported!", os),
+    }
+    .expect("Failed to compile!");
+
+    if output.stderr.len() != 0 {
+        println!(
+            "----------STDERR---------\n{}--------------------------",
+            String::from_utf8(output.stderr).unwrap(),
+        );
+    }
+
+    if output.stdout.len() != 0 {
+        println!(
+            "----------STDOUT---------\n{}--------------------------",
+            String::from_utf8(output.stdout).unwrap()
+        );
+    }
+
+    if output.status.code().unwrap() == 0 {
+        let output = process::Command::new(format!("./{}", bin_path.to_str().unwrap()))
+            .output()
+            .expect(&format!("Failed to run {}", bin_path.to_str().unwrap()));
+
+        println!(
+            "{}{}Exited with code {}.",
+            String::from_utf8(output.stderr).unwrap(),
+            String::from_utf8(output.stdout).unwrap(),
+            output.status.code().unwrap_or(0)
+        );
     }
 }

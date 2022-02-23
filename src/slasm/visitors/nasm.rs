@@ -1,3 +1,5 @@
+extern crate textwrap;
+
 use crate::slasm::instruction::Instruction;
 use crate::slasm::prelude::VERSION;
 use crate::slasm::program::Program;
@@ -54,5 +56,22 @@ pub fn emit_function(function: &Function) -> String {
 }
 
 pub fn emit_program(program: &Program) -> String {
-    todo!();
+    String::from(textwrap::dedent(
+        r#"
+        global _main
+        section .text
+        _main:
+            mov rax, 0x2000004 ; write
+            mov rdi, 1 ; stdout
+            mov rsi, msg
+            mov rdx, msg.len
+            syscall
+            mov rax, 0x2000001 ; exit
+            mov rdi, 0
+            syscall
+        section .data
+        msg:    db      "Hello, world!", 10
+        .len:   equ     $ - msg
+        "#,
+    ))
 }

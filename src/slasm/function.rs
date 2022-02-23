@@ -12,21 +12,29 @@ pub struct Function {
 }
 
 impl Function {
-    pub fn new(name: String, params: HashSet<String>, locals: HashSet<String>, num_returns: u64) -> Function {
+    pub fn new(
+        name: String,
+        params: HashSet<String>,
+        locals: HashSet<String>,
+        num_returns: u64,
+    ) -> Function {
         Function {
             name: name,
             params: params,
             locals: locals,
             num_returns: num_returns,
             basic_blocks: HashMap::new(),
-            entry: None
+            entry: None,
         }
     }
 
     pub fn add_basic_block(&mut self, name: String, basic_block: BasicBlock) {
-        if self.basic_blocks.contains_key(&name) {
-            panic!("Function '{}' already contains a basic block with name '{}'!", self.name, name);
-        }
+        assert!(
+            !self.basic_blocks.contains_key(&name),
+            "Function '{}' already contains a basic block with name '{}'!",
+            self.name,
+            name
+        );
 
         self.basic_blocks.insert(name, basic_block);
     }
@@ -69,16 +77,19 @@ impl Function {
 
     pub fn entry(&self) -> &String {
         if let Some(name) = &self.entry {
-            return name
+            return name;
         }
 
         panic!("Function '{}' does not have a set entry!", self.name);
     }
 
     pub fn set_entry(&mut self, value: String) {
-        if !self.basic_blocks.contains_key(&value) {
-            panic!("Function '{}' does not contain a basic block with name '{}'!", self.name, value);
-        }
+        assert!(
+            self.basic_blocks.contains_key(&value),
+            "Function '{}' does not contain a basic block with name '{}'!",
+            self.name,
+            value
+        );
 
         self.entry = Some(value);
     }

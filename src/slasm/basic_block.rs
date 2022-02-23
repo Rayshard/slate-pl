@@ -14,9 +14,11 @@ impl BasicBlock {
     }
 
     pub fn append(&mut self, instr: Instruction) {
-        if self.is_terminated() {
-            panic!("Cannot append an instruction to a terminated block!");
-        }
+        assert!(
+            !self.is_terminated(),
+            "Cannot append an instruction to a terminated block!"
+        );
+
         self.instructions.push(instr);
     }
 
