@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<program slasm_version="1.0.0" entry="Main">
+  <data label="my_string" bytes="SGVsbG8sIFdvcmxkIQAAAA==" />
+  <function name="Main" num_returns="1" entry="entry">
+    <param name="b" />
+    <param name="a" />
+    <local name="d" />
+    <local name="c" />
+    <basic_block label="entry">
+      <LOAD_CONST value="0x000000000000007B" />
+      <Call target="DEBUG_PRINT_I64" />
+      <LOAD_CONST value="0x0000000000000040" />
+      <RET />
+    </basic_block>
+  </function>
+</program>

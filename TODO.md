@@ -10,7 +10,7 @@
 - Game of Life
 
 # Slasm
-- Slasm functions must have a prologue and epilogue bc LOAD_LOCAL and LOAD_PARAM rely on rbp
+- Slasm functions must have a prologue and epilogue bc LOAD_LOCAL and LOAD_PARAM rely on rbp; Also wanna have it so that functions can return multiple values by just placing them on the stack
 - Remove globals
   - Only use data
     - LOAD_DATA_ADDR {name}
