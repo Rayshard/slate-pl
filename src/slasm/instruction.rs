@@ -13,6 +13,9 @@ pub enum Instruction {
     StoreGlobal { name: String },
     LoadMem { offset: i64 },
     StoreMem { offset: i64 },
+    LoadLocalAddr { name: String },
+    LoadParamAddr { name: String },
+    LoadGlobalAddr { name: String },
     LoadFuncAddr { name: String },
     Add { data_type: DataType },
     Sub { data_type: DataType },
@@ -38,6 +41,6 @@ pub enum Instruction {
     Jump { target: String },
     CondJump { target: String },
     Call { target: String },
-    IndirectCall { num_params: u64, num_returns: u64 },
+    IndirectCall { param_buffer_size: u64, ret_buffer_size: u64 },
     Ret,
 }

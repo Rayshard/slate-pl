@@ -25,6 +25,10 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::StoreGlobal { name } => String::from(""),
         Instruction::LoadMem { offset } => String::from(""),
         Instruction::StoreMem { offset } => String::from(""),
+        Instruction::LoadLocalAddr { name } => String::from(""),
+        Instruction::LoadParamAddr { name } => String::from(""),
+        Instruction::LoadGlobalAddr { name } => String::from(""),
+        Instruction::LoadFuncAddr { name } => String::from(""),
         Instruction::Add { data_type } => String::from(""),
         Instruction::Sub { data_type } => String::from(""),
         Instruction::Mul { data_type } => String::from(""),
@@ -44,10 +48,9 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::CondJump { target } => String::from(""),
         Instruction::Call { target } => String::from(""),
         Instruction::IndirectCall {
-            num_params,
-            num_returns,
+            param_buffer_size,
+            ret_buffer_size,
         } => String::from(""),
-        _ => todo!("{:?}", instr),
     }
 }
 

@@ -6,7 +6,7 @@ use crate::slasm::program::Program;
 use crate::slasm::visitors::nasm;
 use crate::slasm::visitors::xml;
 use ::xml::EmitterConfig;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -21,9 +21,9 @@ fn main() {
 
     let mut function = Function::new(
         String::from("Main"),
-        HashSet::from([String::from("a"), String::from("b")]),
-        HashSet::from([String::from("c"), String::from("d")]),
-        1,
+        HashMap::from([(String::from("a"), 8), (String::from("b"), 16)]),
+        HashMap::from([(String::from("c"), 2), (String::from("d"), 7)]),
+        8,
     );
 
     let mut basic_block = BasicBlock::new();

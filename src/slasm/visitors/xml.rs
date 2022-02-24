@@ -54,6 +54,18 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::StoreMem { offset } => writer
             .write(XmlEvent::start_element("STORE_MEM").attr("offset", &offset.to_string()))
             .unwrap(),
+        Instruction::LoadLocalAddr { name } => writer
+            .write(XmlEvent::start_element("LOAD_LOCAL_ADDR").attr("name", name))
+            .unwrap(),
+        Instruction::LoadParamAddr { name } => writer
+            .write(XmlEvent::start_element("LOAD_PARAM_ADDR").attr("name", name))
+            .unwrap(),
+        Instruction::LoadGlobalAddr { name } => writer
+            .write(XmlEvent::start_element("LOAD_GLOBAL_ADDR").attr("name", name))
+            .unwrap(),
+        Instruction::LoadFuncAddr { name } => writer
+            .write(XmlEvent::start_element("LOAD_FUNC_ADDR").attr("name", name))
+            .unwrap(),
         Instruction::Add { data_type } => writer
             .write(XmlEvent::start_element("ADD").attr("data_type", &data_type.to_string()))
             .unwrap(),
@@ -113,16 +125,15 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
             .write(XmlEvent::start_element("Call").attr("target", target))
             .unwrap(),
         Instruction::IndirectCall {
-            num_params,
-            num_returns,
+            param_buffer_size,
+            ret_buffer_size,
         } => writer
             .write(
                 XmlEvent::start_element("INDIRECT_CALL")
-                    .attr("num_params", &num_params.to_string())
-                    .attr("num_returns", &num_returns.to_string()),
+                    .attr("param_buffer_size", &param_buffer_size.to_string())
+                    .attr("ret_buffer_size", &ret_buffer_size.to_string()),
             )
             .unwrap(),
-        _ => todo!("{:?}", instr),
     }
     writer.write(XmlEvent::end_element()).unwrap();
 }
@@ -132,22 +143,30 @@ pub fn emit_function<W: Write>(function: &Function, writer: &mut EventWriter<W>)
         .write(
             XmlEvent::start_element("function")
                 .attr("name", function.name())
-                .attr("num_returns", &function.num_returns().to_string())
+                .attr("ret_buffer_size", &function.ret_buffer_size().to_string())
                 .attr("entry", function.entry()),
         )
         .unwrap();
 
-    for param in function.params() {
+    for (name, size) in function.params() {
         writer
-            .write(XmlEvent::start_element("param").attr("name", param))
+            .write(
+                XmlEvent::start_element("param")
+                    .attr("name", name)
+                    .attr("size", &size.to_string()),
+            )
             .unwrap();
 
         writer.write(XmlEvent::end_element()).unwrap();
     }
 
-    for local in function.locals() {
+    for (name, size) in function.locals() {
         writer
-            .write(XmlEvent::start_element("local").attr("name", local))
+            .write(
+                XmlEvent::start_element("local")
+                    .attr("name", name)
+                    .attr("size", &size.to_string()),
+            )
             .unwrap();
 
         writer.write(XmlEvent::end_element()).unwrap();

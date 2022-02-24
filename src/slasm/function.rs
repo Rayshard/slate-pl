@@ -1,12 +1,11 @@
 use crate::slasm::basic_block::BasicBlock;
 use std::collections::HashMap;
-use std::collections::HashSet;
 
 pub struct Function {
     name: String,
-    params: HashSet<String>,
-    locals: HashSet<String>,
-    num_returns: u64,
+    params: HashMap<String, u64>,
+    locals: HashMap<String, u64>,
+    ret_buffer_size: u64,
     basic_blocks: HashMap<String, BasicBlock>,
     entry: Option<String>,
 }
@@ -14,15 +13,15 @@ pub struct Function {
 impl Function {
     pub fn new(
         name: String,
-        params: HashSet<String>,
-        locals: HashSet<String>,
-        num_returns: u64,
+        params: HashMap<String, u64>,
+        locals: HashMap<String, u64>,
+        ret_buffer_size: u64,
     ) -> Function {
         Function {
             name: name,
             params: params,
             locals: locals,
-            num_returns: num_returns,
+            ret_buffer_size: ret_buffer_size,
             basic_blocks: HashMap::new(),
             entry: None,
         }
@@ -47,24 +46,16 @@ impl Function {
         &self.name
     }
 
-    pub fn params(&self) -> &HashSet<String> {
+    pub fn params(&self) -> &HashMap<String, u64> {
         &self.params
     }
 
-    pub fn locals(&self) -> &HashSet<String> {
+    pub fn locals(&self) -> &HashMap<String, u64> {
         &self.locals
     }
 
-    pub fn num_params(&self) -> usize {
-        self.params.len()
-    }
-
-    pub fn num_locals(&self) -> usize {
-        self.locals.len()
-    }
-
-    pub fn num_returns(&self) -> u64 {
-        self.num_returns
+    pub fn ret_buffer_size(&self) -> u64 {
+        self.ret_buffer_size
     }
 
     pub fn basic_blocks(&self) -> &HashMap<String, BasicBlock> {
@@ -72,7 +63,7 @@ impl Function {
     }
 
     pub fn is_procedure(&self) -> bool {
-        self.num_returns == 0
+        self.ret_buffer_size == 0
     }
 
     pub fn entry(&self) -> &String {
