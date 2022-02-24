@@ -30,6 +30,9 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::Pop { amt } => writer
             .write(XmlEvent::start_element("pop").attr("amt", &amt.to_string()))
             .unwrap(),
+        Instruction::Allocate { amt } => writer
+            .write(XmlEvent::start_element("allocate").attr("amt", &amt.to_string()))
+            .unwrap(),
         Instruction::LoadLocal { name } => writer
             .write(XmlEvent::start_element("load_local").attr("name", name))
             .unwrap(),

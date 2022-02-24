@@ -17,6 +17,7 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::Ret => String::from(""),
         Instruction::Push { data } => String::from(""),
         Instruction::Pop { amt } => String::from(""),
+        Instruction::Allocate { amt } => String::from(""),
         Instruction::LoadLocal { name } => String::from(""),
         Instruction::StoreLocal { name } => String::from(""),
         Instruction::LoadParam { name } => String::from(""),

@@ -5,6 +5,7 @@ pub enum Instruction {
     Noop,
     Push { data: Vec<u8> },
     Pop { amt: u64 },
+    Allocate { amt: u64 },
     LoadLocal { name: String },
     StoreLocal { name: String },
     LoadParam { name: String },
