@@ -196,12 +196,12 @@ pub fn emit_program<W: Write>(program: &Program, writer: &mut EventWriter<W>) {
         )
         .unwrap();
 
-    // Emit data
-    for (label, data) in program.data() {
+    // Emit globals
+    for (name, data) in program.globals() {
         writer
             .write(
-                XmlEvent::start_element("data").attr("label", label).attr(
-                    "bytes",
+                XmlEvent::start_element("global").attr("name", name).attr(
+                    "data",
                     &data
                         .iter()
                         .map(|x| format!("{:02x}", x).to_uppercase())

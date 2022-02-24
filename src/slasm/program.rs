@@ -1,9 +1,8 @@
 use crate::slasm::function::Function;
-use crate::slasm::prelude::WORD_SIZE;
 use std::collections::HashMap;
 
 pub struct Program {
-    data: HashMap<String, Vec<u8>>,
+    globals: HashMap<String, Vec<u8>>,
     functions: HashMap<String, Function>,
     entry: Option<String>,
 }
@@ -11,7 +10,7 @@ pub struct Program {
 impl Program {
     pub fn new() -> Program {
         Program {
-            data: HashMap::new(),
+            globals: HashMap::new(),
             functions: HashMap::new(),
             entry: None,
         }
@@ -27,15 +26,14 @@ impl Program {
         self.functions.insert(function.name().clone(), function);
     }
 
-    pub fn add_data(&mut self, label: String, mut data: Vec<u8>) {
+    pub fn add_global(&mut self, label: String, data: Vec<u8>) {
         assert!(
-            !self.data.contains_key(&label),
-            "Program already contains a data with label '{}'!",
+            !self.globals.contains_key(&label),
+            "Program already contains a global with name '{}'!",
             label
         );
 
-        data.extend(vec![0; (WORD_SIZE - data.len() % WORD_SIZE) % WORD_SIZE]); //Add padding if needed
-        self.data.insert(label, data);
+        self.globals.insert(label, data);
     }
 
     pub fn contains_nonterminated_basic_block(&self) -> bool {
@@ -44,8 +42,8 @@ impl Program {
             .any(|f| f.contains_nonterminated_basic_block())
     }
 
-    pub fn data(&self) -> &HashMap<String, Vec<u8>> {
-        &self.data
+    pub fn globals(&self) -> &HashMap<String, Vec<u8>> {
+        &self.globals
     }
 
     pub fn functions(&self) -> &HashMap<String, Function> {

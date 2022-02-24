@@ -17,7 +17,7 @@ mod slasm;
 
 fn main() {
     let mut program = Program::new();
-    program.add_data(String::from("my_string"), b"Hello, World!\0".to_vec());
+    program.add_global(String::from("my_string"), b"Hello, World!\0".to_vec());
 
     let mut function = Function::new(
         String::from("Main"),
@@ -57,7 +57,7 @@ fn main() {
     fs::write(asm_path, nasm::emit_program(&program)).unwrap();
 
     // Compile
-    let mut bin_path: PathBuf;
+    let bin_path: PathBuf;
     let output = match env::consts::OS {
         "linux" => {
             bin_path = asm_path.with_extension("");
