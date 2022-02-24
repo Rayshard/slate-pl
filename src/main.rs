@@ -27,14 +27,14 @@ fn main() {
     );
 
     let mut basic_block = BasicBlock::new();
-    basic_block.append(Instruction::LoadConst {
-        value: Word::from_i64(123),
+    basic_block.append(Instruction::Push {
+        data: Word::from_i64(123).bytes.to_vec(),
     });
     basic_block.append(Instruction::Call {
         target: String::from("DEBUG_PRINT_I64"),
     });
-    basic_block.append(Instruction::LoadConst {
-        value: Word::from_i64(64),
+    basic_block.append(Instruction::Push {
+        data: Word::from_i64(64).bytes.to_vec(),
     });
     basic_block.append(Instruction::Ret);
 

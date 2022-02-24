@@ -5,7 +5,7 @@ pub const WORD_SIZE: usize = 8;
 
 #[derive(Debug)]
 pub struct Word {
-    bytes: [u8; WORD_SIZE],
+    pub bytes: [u8; WORD_SIZE],
 }
 
 impl Word {

@@ -1,6 +1,3 @@
-extern crate base64;
-extern crate xml;
-
 use crate::slasm::instruction::Instruction;
 use crate::slasm::prelude::VERSION;
 use crate::slasm::program::Program;
@@ -11,7 +8,6 @@ use xml::writer::{EventWriter, XmlEvent};
 pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<W>) {
     match instr {
         Instruction::Noop => writer.write(XmlEvent::start_element("NOOP")).unwrap(),
-        Instruction::Pop => writer.write(XmlEvent::start_element("POP")).unwrap(),
         Instruction::Or => writer.write(XmlEvent::start_element("OR")).unwrap(),
         Instruction::And => writer.write(XmlEvent::start_element("AND")).unwrap(),
         Instruction::Xor => writer.write(XmlEvent::start_element("XOR")).unwrap(),
@@ -19,8 +15,11 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::Shl => writer.write(XmlEvent::start_element("SHL")).unwrap(),
         Instruction::Shr => writer.write(XmlEvent::start_element("SHR")).unwrap(),
         Instruction::Ret => writer.write(XmlEvent::start_element("RET")).unwrap(),
-        Instruction::LoadConst { value } => writer
-            .write(XmlEvent::start_element("LOAD_CONST").attr("value", &value.as_hex()))
+        Instruction::Push { data } => writer
+            .write(XmlEvent::start_element("PUSH").attr("data", &hex::encode_upper(data)))
+            .unwrap(),
+        Instruction::Pop { amt } => writer
+            .write(XmlEvent::start_element("POP").attr("amt", &amt.to_string()))
             .unwrap(),
         Instruction::LoadLocal { name } => writer
             .write(XmlEvent::start_element("LOAD_LOCAL").attr("name", name))
@@ -175,7 +174,7 @@ pub fn emit_program<W: Write>(program: &Program, writer: &mut EventWriter<W>) {
             .write(
                 XmlEvent::start_element("data")
                     .attr("label", label)
-                    .attr("bytes", &base64::encode(data)),
+                    .attr("bytes", &hex::encode_upper(data)),
             )
             .unwrap();
 

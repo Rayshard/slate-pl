@@ -8,7 +8,6 @@ use crate::Function;
 pub fn emit_instruction(instr: &Instruction) -> String {
     match instr {
         Instruction::Noop => String::from(""),
-        Instruction::Pop => String::from(""),
         Instruction::Or => String::from(""),
         Instruction::And => String::from(""),
         Instruction::Xor => String::from(""),
@@ -16,7 +15,8 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::Shl => String::from(""),
         Instruction::Shr => String::from(""),
         Instruction::Ret => String::from(""),
-        Instruction::LoadConst { value } => String::from(""),
+        Instruction::Push { data } => String::from(""),
+        Instruction::Pop { amt } => String::from(""),
         Instruction::LoadLocal { name } => String::from(""),
         Instruction::StoreLocal { name } => String::from(""),
         Instruction::LoadParam { name } => String::from(""),
