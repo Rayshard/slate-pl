@@ -44,9 +44,9 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::GtEq { data_type } => String::from(""),
         Instruction::LtEq { data_type } => String::from(""),
         Instruction::Neg { data_type } => String::from(""),
-        Instruction::Convert { dt_from, dt_to } => String::from(""),
+        Instruction::Convert { from, to } => String::from(""),
         Instruction::Jump { target } => String::from(""),
-        Instruction::CondJump { target } => String::from(""),
+        Instruction::CondJump { true_target, false_target } => String::from(""),
         Instruction::Call { target } => String::from(""),
         Instruction::IndirectCall {
             param_buffer_size,

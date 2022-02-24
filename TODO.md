@@ -10,7 +10,6 @@
 - Game of Life
 
 # Slasm
-- Add ALLOCATE {amt} instruction that reserves [amt] bytes on the stack and pushes the pointer to its start on the stack
 - Slasm functions must have a prologue and epilogue bc LOAD_LOCAL and LOAD_PARAM rely on rbp; Also wanna have it so that functions can return multiple values by just placing them on the stack
 - Remove globals
   - Only use data

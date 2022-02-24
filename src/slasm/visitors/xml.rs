@@ -111,18 +111,25 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::Neg { data_type } => writer
             .write(XmlEvent::start_element("neg").attr("data_type", &data_type.to_string()))
             .unwrap(),
-        Instruction::Convert { dt_from, dt_to } => writer
+        Instruction::Convert { from, to } => writer
             .write(
                 XmlEvent::start_element("convert")
-                    .attr("from", &dt_from.to_string())
-                    .attr("to", &dt_to.to_string()),
+                    .attr("from", &from.to_string())
+                    .attr("to", &to.to_string()),
             )
             .unwrap(),
         Instruction::Jump { target } => writer
             .write(XmlEvent::start_element("jump").attr("target", target))
             .unwrap(),
-        Instruction::CondJump { target } => writer
-            .write(XmlEvent::start_element("cond_jump").attr("target", target))
+        Instruction::CondJump {
+            true_target,
+            false_target,
+        } => writer
+            .write(
+                XmlEvent::start_element("cond_jump")
+                    .attr("true_target", true_target)
+                    .attr("false_target", false_target),
+            )
             .unwrap(),
         Instruction::Call { target } => writer
             .write(XmlEvent::start_element("call").attr("target", target))
