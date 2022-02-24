@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <program slasm_version="1.0.0" entry="Main">
-  <data label="my_string" bytes="48656C6C6F2C20576F726C6421000000" />
+  <data label="my_string" bytes="48:65:6C:6C:6F:2C:20:57:6F:72:6C:64:21:00:00:00" />
   <function name="Main" num_returns="1" entry="entry">
     <param name="b" />
     <param name="a" />
     <local name="d" />
     <local name="c" />
     <basic_block label="entry">
-      <PUSH data="7B00000000000000" />
+      <PUSH data="7B:00:00:00:00:00:00:00" />
       <Call target="DEBUG_PRINT_I64" />
-      <PUSH data="4000000000000000" />
+      <PUSH data="40:00:00:00:00:00:00:00" />
       <RET />
     </basic_block>
   </function>

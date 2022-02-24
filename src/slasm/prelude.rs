@@ -26,8 +26,15 @@ impl Word {
     }
 
     pub fn as_hex(&self) -> String {
-        let be_bytes: Vec<u8> = self.bytes.iter().copied().rev().collect();
-        format!("0x{}", hex::encode_upper(be_bytes))
+        format!(
+            "0x{}",
+            self.bytes
+                .iter()
+                .rev()
+                .map(|x| format!("{:02x}", x).to_uppercase())
+                .collect::<Vec<String>>()
+                .join("")
+        )
     }
 
     pub fn as_i64(&self) -> i64 {

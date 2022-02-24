@@ -16,7 +16,16 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::Shr => writer.write(XmlEvent::start_element("SHR")).unwrap(),
         Instruction::Ret => writer.write(XmlEvent::start_element("RET")).unwrap(),
         Instruction::Push { data } => writer
-            .write(XmlEvent::start_element("PUSH").attr("data", &hex::encode_upper(data)))
+            .write(
+                XmlEvent::start_element("PUSH").attr(
+                    "data",
+                    &data
+                        .iter()
+                        .map(|x| format!("{:02x}", x).to_uppercase())
+                        .collect::<Vec<String>>()
+                        .join(":"),
+                ),
+            )
             .unwrap(),
         Instruction::Pop { amt } => writer
             .write(XmlEvent::start_element("POP").attr("amt", &amt.to_string()))
@@ -172,9 +181,14 @@ pub fn emit_program<W: Write>(program: &Program, writer: &mut EventWriter<W>) {
     for (label, data) in program.data() {
         writer
             .write(
-                XmlEvent::start_element("data")
-                    .attr("label", label)
-                    .attr("bytes", &hex::encode_upper(data)),
+                XmlEvent::start_element("data").attr("label", label).attr(
+                    "bytes",
+                    &data
+                        .iter()
+                        .map(|x| format!("{:02x}", x).to_uppercase())
+                        .collect::<Vec<String>>()
+                        .join(":"),
+                ),
             )
             .unwrap();
 
