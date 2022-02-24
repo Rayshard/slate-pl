@@ -4,13 +4,13 @@
   <function name="Main" ret_buffer_size="8" entry="entry">
     <param name="a" size="8" />
     <param name="b" size="16" />
-    <local name="d" size="7" />
     <local name="c" size="2" />
+    <local name="d" size="7" />
     <basic_block label="entry">
-      <PUSH data="7B:00:00:00:00:00:00:00" />
-      <Call target="DEBUG_PRINT_I64" />
-      <PUSH data="40:00:00:00:00:00:00:00" />
-      <RET />
+      <push data="7B:00:00:00:00:00:00:00" />
+      <call target="DEBUG_PRINT_I64" />
+      <push data="40:00:00:00:00:00:00:00" />
+      <ret />
     </basic_block>
   </function>
 </program>
