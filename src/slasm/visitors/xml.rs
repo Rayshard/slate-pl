@@ -51,10 +51,10 @@ pub fn emit_instruction<W: Write>(instr: &Instruction, writer: &mut EventWriter<
         Instruction::StoreGlobal { name } => writer
             .write(XmlEvent::start_element("store_global").attr("name", name))
             .unwrap(),
-        Instruction::LoadMem { offset } => writer
+        Instruction::LoadMem { offset, amt } => writer
             .write(XmlEvent::start_element("load_mem").attr("offset", &offset.to_string()))
             .unwrap(),
-        Instruction::StoreMem { offset } => writer
+        Instruction::StoreMem { offset, amt } => writer
             .write(XmlEvent::start_element("store_mem").attr("offset", &offset.to_string()))
             .unwrap(),
         Instruction::LoadLocalAddr { name } => writer

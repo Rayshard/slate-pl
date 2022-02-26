@@ -53,12 +53,14 @@ fn main() {
     xml::emit_program(&program, &mut xml_writer);
 
     // Emit nasm
-    let asm_path = Path::new("tests/rust/test.asm");
+    let os_name = env::consts::OS;
+    let asm_path = format!("tests/rust/test.{}.asm", os_name);
+    let asm_path = Path::new(&asm_path);
     fs::write(asm_path, nasm::emit_program(&program)).unwrap();
 
     // Compile
     let bin_path: PathBuf;
-    let output = match env::consts::OS {
+    let output = match os_name {
         "linux" => {
             bin_path = asm_path.with_extension("");
 
@@ -80,9 +82,18 @@ fn main() {
                 .output()
         }
         "windows" => {
-            bin_path = asm_path.with_extension("");
+            bin_path = asm_path.with_extension(".exe");
 
-            todo!("windows")
+            let obj_path = asm_path.with_extension("obj");
+
+            process::Command::new("/C")
+                .arg(format!(
+                    "nasm -f win64 {} -o {} && golink /entry:Start /console kernel32.dll user32.dll {}",
+                    asm_path.to_str().unwrap(),
+                    obj_path.to_str().unwrap(),
+                    obj_path.to_str().unwrap(),
+                ))
+                .output()
         }
         os => panic!("Compilation to {} is not supported!", os),
     }

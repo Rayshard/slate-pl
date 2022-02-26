@@ -32,9 +32,11 @@ pub enum Instruction {
     },
     LoadMem {
         offset: i64,
+        amt: u8,
     },
     StoreMem {
         offset: i64,
+        amt: u8,
     },
     LoadLocalAddr {
         name: String,
