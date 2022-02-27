@@ -111,7 +111,8 @@ fn main() {
             assembler_cmd.arg("elf64");
             assembler_cmd.arg(&asm_path);
 
-            let mut linker_cmd = process::Command::new("ld");
+            let mut linker_cmd = process::Command::new("gcc");
+            linker_cmd.arg("-m64");
             linker_cmd.arg("-o");
             linker_cmd.arg(&exe_path);
             linker_cmd.arg(&obj_path);

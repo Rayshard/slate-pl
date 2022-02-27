@@ -1,3 +1,5 @@
+BITS 64
+
 extern printf
 
 %macro LINUX_x86_64_SYSCALL1 0
@@ -23,14 +25,14 @@ extern printf
     section .text
 
     default rel
-    global _main
+    global main
 
 LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
 LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
 C_CALL_3_WITH_RET: C_CALL_3
 C_CALL_3_NO_RET: C_CALL_3
 
-_main:
+main:
     ; create stack frame
     push rbp
     mov rbp, rsp
@@ -58,7 +60,7 @@ DEBUG_PRINT_I64:
     push 0
 
     ; arg1 (function address)
-    lea rax, [_printf wrt ..gotpcrel]   ; obtain pointer to function address
+    lea rax, [printf wrt ..plt]   ; obtain pointer to function address
     push QWORD [rax]                    ; deference pointer
 
     ; perform call
