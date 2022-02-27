@@ -17,19 +17,22 @@ use std::time;
 
 mod slasm;
 
-fn get_include_file(name: &'static str) -> Vec<u8> {
-    match name {
+fn get_include_file(name: String) -> Vec<u8> {
+    match name.as_str() {
         "nasm_template_windows.asm" => {
-            static file: &'static [u8] = include_bytes!("include/nasm_template_windows.asm");
-            file.to_vec()
+            static FILE: &'static [u8] = include_bytes!("include/nasm_template_windows.asm");
+            FILE.to_vec()
         }
         "nasm_template_macos.asm" => {
-            static file: &'static [u8] = include_bytes!("include/nasm_template_macos.asm");
-            file.to_vec()
+            static FILE: &'static [u8] = include_bytes!("include/nasm_template_macos.asm");
+            FILE.to_vec()
         }
         "nasm_template_linux.asm" => {
-            static file: &'static [u8] = include_bytes!("include/nasm_template_linux.asm");
-            file.to_vec()
+            static FILE: &'static [u8] = include_bytes!("include/nasm_template_linux.asm");
+            FILE.to_vec()
+        }
+        _ => {
+            panic!("Unknown file: {}", name);
         }
     }
 }

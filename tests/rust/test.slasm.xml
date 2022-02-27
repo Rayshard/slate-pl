@@ -2,8 +2,8 @@
 <program slasm_version="1.0.0" entry="Main">
   <global name="my_string" data="48:65:6C:6C:6F:2C:20:57:6F:72:6C:64:21:00" />
   <function name="Main" ret_buffer_size="8" entry="entry">
-    <param name="a" size="8" />
     <param name="b" size="16" />
+    <param name="a" size="8" />
     <local name="c" size="2" />
     <local name="d" size="7" />
     <basic_block label="entry">
