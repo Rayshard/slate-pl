@@ -5,6 +5,7 @@ use crate::slasm::prelude::Word;
 use crate::slasm::program::Program;
 use crate::slasm::visitors::nasm;
 use crate::slasm::visitors::xml;
+use ::tempdir::TempDir;
 use ::xml::EmitterConfig;
 use std::collections::HashMap;
 use std::env;
@@ -31,8 +32,7 @@ fn command_to_string(cmd: &Command) -> String {
 }
 
 fn main() {
-    let os_name = env::consts::OS;
-    let mut program = Program::new(format!("test_{}", os_name));
+    let mut program = Program::new(String::from("test"));
     program.add_global(String::from("my_string"), b"Hello, World!\0".to_vec());
 
     let mut function = Function::new(
@@ -69,10 +69,11 @@ fn main() {
     xml::emit_program(&program, &mut xml_writer);
 
     // Emit nasm
-    let asm_path = format!("tests/rust/{}.asm", program.name());
+    let temp_dir = TempDir::new("").expect("Unable to create temporary directory for compilation!");
+    let asm_path = temp_dir.path().join(format!("{}.asm", program.name()));
 
     // Compile
-    let (compilation_cmds, mut exec_cmd) = match os_name {
+    let (compilation_cmds, mut exec_cmd) = match env::consts::OS {
         "linux" => {
             fs::write(
                 &asm_path,
@@ -83,8 +84,8 @@ fn main() {
             )
             .unwrap();
 
-            let obj_path = format!("tests/rust/{}.o", program.name());
-            let exe_path = format!("tests/rust/{}", program.name());
+            let obj_path = asm_path.with_extension("o");
+            let exe_path = asm_path.with_extension("");
 
             let mut assembler_cmd = process::Command::new("nasm");
             assembler_cmd.arg("-f");
@@ -111,8 +112,8 @@ fn main() {
             )
             .unwrap();
 
-            let obj_path = format!("tests/rust/{}.o", program.name());
-            let exe_path = format!("tests/rust/{}", program.name());
+            let obj_path = asm_path.with_extension("o");
+            let exe_path = asm_path.with_extension("");
 
             let mut assembler_cmd = process::Command::new("nasm");
             assembler_cmd.arg("-f");
@@ -142,8 +143,8 @@ fn main() {
             )
             .unwrap();
 
-            let obj_path = format!("tests/rust/{}.obj", program.name());
-            let exe_path = format!("tests/rust/{}.exe", program.name());
+            let obj_path = asm_path.with_extension("obj");
+            let exe_path = asm_path.with_extension("exe");
 
             let mut assembler_cmd = process::Command::new("nasm");
             assembler_cmd.arg("-f");
