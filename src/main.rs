@@ -13,6 +13,7 @@ use std::fs;
 use std::fs::File;
 use std::process;
 use std::process::Command;
+use std::time;
 
 mod slasm;
 
@@ -68,11 +69,10 @@ fn main() {
 
     xml::emit_program(&program, &mut xml_writer);
 
-    // Emit nasm
+    // Emit nasm and compile
     let temp_dir = TempDir::new("").expect("Unable to create temporary directory for compilation!");
     let asm_path = temp_dir.path().join(format!("{}.asm", program.name()));
-
-    // Compile
+    
     let (compilation_cmds, mut exec_cmd) = match env::consts::OS {
         "linux" => {
             fs::write(
@@ -169,16 +169,28 @@ fn main() {
     };
 
     for mut cmd in compilation_cmds {
+        let now = time::Instant::now();
         println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&cmd));
 
         if !cmd.spawn().unwrap().wait().unwrap().success() {
             return;
         }
+
+        println!(
+            "\x1b[93m[Finished in {} seconds]\x1b[0m",
+            now.elapsed().as_secs_f64()
+        );
     }
 
     // Run
+    let now = time::Instant::now();
+
     println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&exec_cmd));
     let exec_exit_code = exec_cmd.spawn().unwrap().wait().unwrap();
 
-    println!("Exited with code {}.", exec_exit_code.code().unwrap());
+    println!(
+        "\x1b[93m[Exited with code {}]\x1b[0m\n\x1b[93m[Finished in {} seconds]\x1b[0m",
+        exec_exit_code.code().unwrap(),
+        now.elapsed().as_secs_f64()
+    );
 }
