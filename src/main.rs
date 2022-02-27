@@ -10,13 +10,29 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
-use std::path::{Path, PathBuf};
 use std::process;
+use std::process::Command;
 
 mod slasm;
 
+static NASM_TEMPLATE_WINDOWS: &'static [u8] = include_bytes!("etc/nasm_template_windows.asm");
+static NASM_TEMPLATE_MACOS: &'static [u8] = include_bytes!("etc/nasm_template_macos.asm");
+static NASM_TEMPLATE_LINUX: &'static [u8] = include_bytes!("etc/nasm_template_linux.asm");
+
+fn command_to_string(cmd: &Command) -> String {
+    format!(
+        "{} {}",
+        cmd.get_program().to_str().unwrap(),
+        cmd.get_args()
+            .map(|x| String::from(x.to_str().unwrap()))
+            .collect::<Vec<String>>()
+            .join(" ")
+    )
+}
+
 fn main() {
-    let mut program = Program::new();
+    let os_name = env::consts::OS;
+    let mut program = Program::new(format!("test_{}", os_name));
     program.add_global(String::from("my_string"), b"Hello, World!\0".to_vec());
 
     let mut function = Function::new(
@@ -45,7 +61,7 @@ fn main() {
     program.set_entry(String::from("Main"));
 
     // Emit XML serialization
-    let mut xml_file = File::create("tests/rust/test.slasm.xml").unwrap();
+    let mut xml_file = File::create(format!("tests/rust/{}.slasm.xml", program.name())).unwrap();
     let mut xml_writer = EmitterConfig::new()
         .perform_indent(true)
         .create_writer(&mut xml_file);
@@ -53,76 +69,76 @@ fn main() {
     xml::emit_program(&program, &mut xml_writer);
 
     // Emit nasm
-    let os_name = env::consts::OS;
-    let asm_path = format!("tests/rust/test.{}.asm", os_name);
-    let asm_path = Path::new(&asm_path);
-    fs::write(asm_path, nasm::emit_program(&program)).unwrap();
+    let asm_path = format!("tests/rust/{}.asm", program.name());
 
     // Compile
-    let bin_path: PathBuf;
-    let output = match os_name {
+    let (compilation_cmds, mut exec_cmd) = match os_name {
         "linux" => {
-            bin_path = asm_path.with_extension("");
-
             todo!("linux")
         }
         "macos" => {
-            bin_path = asm_path.with_extension("");
+            // bin_path = asm_path.with_extension("");
 
-            let obj_path = asm_path.with_extension("o");
+            // let obj_path = asm_path.with_extension("o");
 
-            process::Command::new("sh")
-                .arg("-c")
-                .arg(format!(
-                    "nasm -f macho64 {} && gcc -Wl,-no_pie -arch x86_64 -o {} {}",
-                    asm_path.to_str().unwrap(),
-                    bin_path.to_str().unwrap(),
-                    obj_path.to_str().unwrap()
-                ))
-                .output()
+            // process::Command::new("sh")
+            //     .arg("-c")
+            //     .arg(format!(
+            //         "nasm -f macho64 {} && gcc -Wl,-no_pie -arch x86_64 -o {} {}",
+            //         asm_path.to_str().unwrap(),
+            //         bin_path.to_str().unwrap(),
+            //         obj_path.to_str().unwrap()
+            //     ))
+            //     .output()
+
+            todo!("macos")
         }
         "windows" => {
-            bin_path = asm_path.with_extension(".exe");
+            fs::write(
+                &asm_path,
+                nasm::emit_program(
+                    &program,
+                    String::from_utf8(NASM_TEMPLATE_WINDOWS.to_vec()).unwrap(),
+                ),
+            )
+            .unwrap();
 
-            let obj_path = asm_path.with_extension("obj");
+            let obj_path = format!("tests/rust/{}.obj", program.name());
+            let exe_path = format!("tests/rust/{}.exe", program.name());
 
-            process::Command::new("/C")
-                .arg(format!(
-                    "nasm -f win64 {} -o {} && golink /entry:Start /console kernel32.dll user32.dll {}",
-                    asm_path.to_str().unwrap(),
-                    obj_path.to_str().unwrap(),
-                    obj_path.to_str().unwrap(),
-                ))
-                .output()
+            let mut assembler_cmd = process::Command::new("nasm");
+            assembler_cmd.arg("-f");
+            assembler_cmd.arg("win64");
+            assembler_cmd.arg(&asm_path);
+            assembler_cmd.arg("-o");
+            assembler_cmd.arg(&obj_path);
+
+            let mut linker_cmd = process::Command::new("golink");
+            linker_cmd.arg("/entry:Start");
+            linker_cmd.arg("/console");
+            linker_cmd.arg("kernel32.dll");
+            linker_cmd.arg("user32.dll");
+            linker_cmd.arg(&obj_path);
+
+            (
+                vec![assembler_cmd, linker_cmd],
+                process::Command::new(exe_path),
+            )
         }
         os => panic!("Compilation to {} is not supported!", os),
-    }
-    .expect("Failed to compile!");
+    };
 
-    if output.stderr.len() != 0 {
-        println!(
-            "----------STDERR---------\n{}--------------------------",
-            String::from_utf8(output.stderr).unwrap(),
-        );
-    }
+    for mut cmd in compilation_cmds {
+        println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&cmd));
 
-    if output.stdout.len() != 0 {
-        println!(
-            "----------STDOUT---------\n{}--------------------------",
-            String::from_utf8(output.stdout).unwrap()
-        );
+        if !cmd.spawn().unwrap().wait().unwrap().success() {
+            return;
+        }
     }
 
-    if output.status.code().unwrap() == 0 {
-        let output = process::Command::new(format!("./{}", bin_path.to_str().unwrap()))
-            .output()
-            .expect(&format!("Failed to run {}", bin_path.to_str().unwrap()));
+    // Run
+    println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&exec_cmd));
+    let exec_exit_code = exec_cmd.spawn().unwrap().wait().unwrap();
 
-        println!(
-            "{}{}Exited with code {}.",
-            String::from_utf8(output.stderr).unwrap(),
-            String::from_utf8(output.stdout).unwrap(),
-            output.status.code().unwrap_or(0)
-        );
-    }
+    println!("Exited with code {}.", exec_exit_code.code().unwrap());
 }

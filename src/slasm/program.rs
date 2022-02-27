@@ -2,14 +2,16 @@ use crate::slasm::function::Function;
 use std::collections::HashMap;
 
 pub struct Program {
+    name: String,
     globals: HashMap<String, Vec<u8>>,
     functions: HashMap<String, Function>,
     entry: Option<String>,
 }
 
 impl Program {
-    pub fn new() -> Program {
+    pub fn new(name: String) -> Program {
         Program {
+            name: name,
             globals: HashMap::new(),
             functions: HashMap::new(),
             entry: None,
@@ -40,6 +42,10 @@ impl Program {
         self.functions
             .values()
             .any(|f| f.contains_nonterminated_basic_block())
+    }
+
+    pub fn name(&self) -> &String {
+        &self.name
     }
 
     pub fn globals(&self) -> &HashMap<String, Vec<u8>> {

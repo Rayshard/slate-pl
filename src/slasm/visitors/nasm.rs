@@ -59,23 +59,6 @@ pub fn emit_function(function: &Function) -> String {
     todo!();
 }
 
-pub fn emit_program(program: &Program) -> String {
-    String::from(textwrap::dedent(
-        r#"
-        global _main
-        section .text
-        _main:
-            mov rax, 0x2000004 ; write
-            mov rdi, 1 ; stdout
-            mov rsi, msg
-            mov rdx, msg.len
-            syscall
-            mov rax, 0x2000001 ; exit
-            mov rdi, 0
-            syscall
-        section .data
-        msg:    db      "Hello, world!", 10
-        .len:   equ     $ - msg
-        "#,
-    ))
+pub fn emit_program(program: &Program, template: String) -> String {
+    template
 }
