@@ -17,9 +17,22 @@ use std::time;
 
 mod slasm;
 
-static NASM_TEMPLATE_WINDOWS: &'static [u8] = include_bytes!("etc/nasm_template_windows.asm");
-static NASM_TEMPLATE_MACOS: &'static [u8] = include_bytes!("etc/nasm_template_macos.asm");
-static NASM_TEMPLATE_LINUX: &'static [u8] = include_bytes!("etc/nasm_template_linux.asm");
+fn get_include_file(name: &'static str) -> Vec<u8> {
+    match name {
+        "nasm_template_windows.asm" => {
+            static file: &'static [u8] = include_bytes!("include/nasm_template_windows.asm");
+            file.to_vec()
+        }
+        "nasm_template_macos.asm" => {
+            static file: &'static [u8] = include_bytes!("include/nasm_template_macos.asm");
+            file.to_vec()
+        }
+        "nasm_template_linux.asm" => {
+            static file: &'static [u8] = include_bytes!("include/nasm_template_linux.asm");
+            file.to_vec()
+        }
+    }
+}
 
 fn command_to_string(cmd: &Command) -> String {
     format!(
@@ -70,20 +83,21 @@ fn main() {
     xml::emit_program(&program, &mut xml_writer);
 
     // Emit nasm and compile
+    let os_name = env::consts::OS;
     let temp_dir = TempDir::new("").expect("Unable to create temporary directory for compilation!");
     let asm_path = temp_dir.path().join(format!("{}.asm", program.name()));
-    
-    let (compilation_cmds, mut exec_cmd) = match env::consts::OS {
-        "linux" => {
-            fs::write(
-                &asm_path,
-                nasm::emit_program(
-                    &program,
-                    String::from_utf8(NASM_TEMPLATE_LINUX.to_vec()).unwrap(),
-                ),
-            )
-            .unwrap();
 
+    fs::write(
+        &asm_path,
+        nasm::emit_program(
+            &program,
+            String::from_utf8(get_include_file(format!("nasm_template_{}.asm", os_name))).unwrap(),
+        ),
+    )
+    .unwrap();
+
+    let (compilation_cmds, mut exec_cmd) = match os_name {
+        "linux" => {
             let obj_path = asm_path.with_extension("o");
             let exe_path = asm_path.with_extension("");
 
@@ -103,15 +117,6 @@ fn main() {
             )
         }
         "macos" => {
-            fs::write(
-                &asm_path,
-                nasm::emit_program(
-                    &program,
-                    String::from_utf8(NASM_TEMPLATE_MACOS.to_vec()).unwrap(),
-                ),
-            )
-            .unwrap();
-
             let obj_path = asm_path.with_extension("o");
             let exe_path = asm_path.with_extension("");
 
@@ -134,15 +139,6 @@ fn main() {
             )
         }
         "windows" => {
-            fs::write(
-                &asm_path,
-                nasm::emit_program(
-                    &program,
-                    String::from_utf8(NASM_TEMPLATE_WINDOWS.to_vec()).unwrap(),
-                ),
-            )
-            .unwrap();
-
             let obj_path = asm_path.with_extension("obj");
             let exe_path = asm_path.with_extension("exe");
 
