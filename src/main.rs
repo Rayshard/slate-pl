@@ -74,24 +74,63 @@ fn main() {
     // Compile
     let (compilation_cmds, mut exec_cmd) = match os_name {
         "linux" => {
-            todo!("linux")
+            fs::write(
+                &asm_path,
+                nasm::emit_program(
+                    &program,
+                    String::from_utf8(NASM_TEMPLATE_LINUX.to_vec()).unwrap(),
+                ),
+            )
+            .unwrap();
+
+            let obj_path = format!("tests/rust/{}.o", program.name());
+            let exe_path = format!("tests/rust/{}", program.name());
+
+            let mut assembler_cmd = process::Command::new("nasm");
+            assembler_cmd.arg("-f");
+            assembler_cmd.arg("elf64");
+            assembler_cmd.arg(&asm_path);
+
+            let mut linker_cmd = process::Command::new("ld");
+            linker_cmd.arg("-o");
+            linker_cmd.arg(&exe_path);
+            linker_cmd.arg(&obj_path);
+
+            (
+                vec![assembler_cmd, linker_cmd],
+                process::Command::new(exe_path),
+            )
         }
         "macos" => {
-            // bin_path = asm_path.with_extension("");
+            fs::write(
+                &asm_path,
+                nasm::emit_program(
+                    &program,
+                    String::from_utf8(NASM_TEMPLATE_MACOS.to_vec()).unwrap(),
+                ),
+            )
+            .unwrap();
 
-            // let obj_path = asm_path.with_extension("o");
+            let obj_path = format!("tests/rust/{}.o", program.name());
+            let exe_path = format!("tests/rust/{}", program.name());
 
-            // process::Command::new("sh")
-            //     .arg("-c")
-            //     .arg(format!(
-            //         "nasm -f macho64 {} && gcc -Wl,-no_pie -arch x86_64 -o {} {}",
-            //         asm_path.to_str().unwrap(),
-            //         bin_path.to_str().unwrap(),
-            //         obj_path.to_str().unwrap()
-            //     ))
-            //     .output()
+            let mut assembler_cmd = process::Command::new("nasm");
+            assembler_cmd.arg("-f");
+            assembler_cmd.arg("macho64");
+            assembler_cmd.arg(&asm_path);
 
-            todo!("macos")
+            let mut linker_cmd = process::Command::new("gcc");
+            linker_cmd.arg("-Wl,-no_pie");
+            linker_cmd.arg("-arch");
+            linker_cmd.arg("x86_64");
+            linker_cmd.arg("-o");
+            linker_cmd.arg(&exe_path);
+            linker_cmd.arg(&obj_path);
+
+            (
+                vec![assembler_cmd, linker_cmd],
+                process::Command::new(exe_path),
+            )
         }
         "windows" => {
             fs::write(
