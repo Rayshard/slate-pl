@@ -36,7 +36,7 @@ _main:
     mov rbp, rsp
 
     ; call entry function
-    call #ENTRY_FUNC_NAME#
+    call Main
 
     ; delete stack frame
     mov rsp, rbp
@@ -72,3 +72,16 @@ DEBUG_PRINT_I64:
 
     ; LOCAL READONLY VARIABLES
     .fmt: db "%lli", 0x0A, 0
+
+; ==================== END OF HEADER ====================
+
+    section .data
+my_string: db 72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33, 0
+
+    section .text
+Main:
+    push 0x0000000000000010
+    call DEBUG_PRINT_I64
+    add rsp, 8
+    mov rax, 17
+    ret

@@ -46,7 +46,10 @@ pub fn emit_instruction(instr: &Instruction) -> String {
         Instruction::Neg { data_type } => String::from(""),
         Instruction::Convert { from, to } => String::from(""),
         Instruction::Jump { target } => String::from(""),
-        Instruction::CondJump { true_target, false_target } => String::from(""),
+        Instruction::CondJump {
+            true_target,
+            false_target,
+        } => String::from(""),
         Instruction::Call { target } => String::from(""),
         Instruction::IndirectCall {
             param_buffer_size,
@@ -59,6 +62,34 @@ pub fn emit_function(function: &Function) -> String {
     todo!();
 }
 
-pub fn emit_program(program: &Program, template: String) -> String {
-    template
+pub fn emit_program(program: &Program, header: String) -> String {
+    let mut result = header;
+
+    assert!(result.contains("#ENTRY_FUNC_NAME#"));
+    result = result.replace("#ENTRY_FUNC_NAME#", program.entry().as_str());
+
+    result.push_str("\n\n; ==================== END OF HEADER ====================");
+    
+    // Add globals
+    result.push_str("\n\n    section .data");
+
+    for (name, data) in program.globals() {
+        let text = format!(
+            "\n{}: db {}",
+            name,
+            data.iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+
+        result.push_str(text.as_str());
+    }
+
+    // Add functions
+    result.push_str("\n\n    section .text");
+
+    result.push_str("\nMain:\n    push 0x0000000000000010\n    call DEBUG_PRINT_I64\n    add rsp, 8\n    mov rax, 17\n    ret");
+
+    result
 }

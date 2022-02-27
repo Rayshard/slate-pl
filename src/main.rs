@@ -99,6 +99,8 @@ fn main() {
     )
     .unwrap();
 
+    fs::copy(&asm_path, "tests/rust/output.asm").unwrap();
+
     let (compilation_cmds, mut exec_cmd) = match os_name {
         "linux" => {
             let obj_path = asm_path.with_extension("o");
@@ -129,7 +131,7 @@ fn main() {
             assembler_cmd.arg(&asm_path);
 
             let mut linker_cmd = process::Command::new("gcc");
-            linker_cmd.arg("-Wl,-no_pie");
+            //linker_cmd.arg("-Wl,-no_pie");
             linker_cmd.arg("-arch");
             linker_cmd.arg("x86_64");
             linker_cmd.arg("-o");
