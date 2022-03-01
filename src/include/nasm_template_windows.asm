@@ -1,3 +1,18 @@
+extern printf
+
+%macro C_CALL_3 0
+    push rbp                ; store old base pointer
+    mov rbp, rsp            ; set new base pointer
+    mov rsi, [rbp + 40]     ; set third argument
+    mov rdi, [rbp + 32]     ; set second argument
+    mov rax, [rbp + 24]     ; set first argument
+    and  rsp, -16           ; align stack to 16-byte boundary
+    call [rbp + 16]         ; perform C function call        
+    mov rsp, rbp            ; clean up stack
+    pop rbp                 ; restore old base pointer
+    ret                     ; return
+%endmacro
+
                                                 ; Console Message, 64 bit. V1.03
 NULL              EQU 0                         ; Constants
 STD_OUTPUT_HANDLE EQU -11
@@ -18,7 +33,39 @@ alignb 8
     Written        resq 1
 
 section .text                                   ; Code segment
+
+C_CALL_3_WITH_RET: C_CALL_3
+C_CALL_3_NO_RET: C_CALL_3
+
 Start:
+    ; arg4 (number)
+    mov rax, [rsp + 8]
+    push rax
+
+    ; arg3 (format)
+    lea rax, [.fmt] 
+    push rax
+    
+    ; arg2 (number of floating-point arguments)
+    push 0
+
+    ; arg1 (function address)
+    lea rax, [rel printf]   ; obtain pointer to function address
+    push QWORD [rax]                    ; deference pointer
+
+    ; perform call
+    call C_CALL_3_NO_RET
+
+    ; remove aruments
+    add rsp, 32
+
+    ; return
+    ret
+
+    ; LOCAL READONLY VARIABLES
+    .fmt: db "%lli", 0x0A, 0
+
+    ;other
     sub   RSP, 8                                   ; Align the stack to a multiple of 16 bytes
 
     sub   RSP, 32                                  ; 32 bytes of shadow space

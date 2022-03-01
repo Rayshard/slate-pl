@@ -160,6 +160,7 @@ fn main() {
             linker_cmd.arg("/console");
             linker_cmd.arg("kernel32.dll");
             linker_cmd.arg("user32.dll");
+            linker_cmd.arg("msvcrt.dll");
             linker_cmd.arg(&obj_path);
 
             (
