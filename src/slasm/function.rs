@@ -5,7 +5,7 @@ pub struct Function {
     name: String,
     params: HashMap<String, u64>,
     locals: HashMap<String, u64>,
-    ret_buffer_size: u64,
+    returns: Vec<u64>,
     basic_blocks: HashMap<String, BasicBlock>,
     entry: Option<String>,
 }
@@ -15,13 +15,15 @@ impl Function {
         name: String,
         params: HashMap<String, u64>,
         locals: HashMap<String, u64>,
-        ret_buffer_size: u64,
+        returns: Vec<u64>,
     ) -> Function {
+        assert!(returns.iter().all(|ret| ret > &0), "Functions cannot return 0-sized values!");
+
         Function {
             name: name,
             params: params,
             locals: locals,
-            ret_buffer_size: ret_buffer_size,
+            returns: returns,
             basic_blocks: HashMap::new(),
             entry: None,
         }
@@ -54,8 +56,12 @@ impl Function {
         &self.locals
     }
 
-    pub fn ret_buffer_size(&self) -> u64 {
-        self.ret_buffer_size
+    pub fn returns(&self) -> &Vec<u64> {
+        &self.returns
+    }
+
+    pub fn total_returns_size(&self) -> u64 {
+        self.returns.iter().sum()
     }
 
     pub fn basic_blocks(&self) -> &HashMap<String, BasicBlock> {
@@ -63,7 +69,7 @@ impl Function {
     }
 
     pub fn is_procedure(&self) -> bool {
-        self.ret_buffer_size == 0
+        self.total_returns_size() == 0
     }
 
     pub fn entry(&self) -> &String {

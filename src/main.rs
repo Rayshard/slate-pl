@@ -56,7 +56,7 @@ fn main() {
         String::from("Main"),
         HashMap::from([(String::from("a"), 8), (String::from("b"), 16)]),
         HashMap::from([(String::from("c"), 2), (String::from("d"), 7)]),
-        8,
+        vec![8],
     );
 
     let mut basic_block = BasicBlock::new();

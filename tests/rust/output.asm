@@ -1,4 +1,11 @@
-extern printf
+extern _printf
+
+%macro LINUX_x86_64_SYSCALL1 0
+    mov rax, [rsp + 8]  ; set syscall code
+    mov rdi, [rsp + 16] ; set first argument
+    syscall             ; perform syscall
+    ret                 ; return
+%endmacro
 
 %macro C_CALL_3 0
     push rbp                ; store old base pointer
@@ -13,31 +20,32 @@ extern printf
     ret                     ; return
 %endmacro
 
-                                                ; Console Message, 64 bit. V1.03
-NULL              EQU 0                         ; Constants
-STD_OUTPUT_HANDLE EQU -11
+    section .text
 
-extern GetStdHandle                             ; Import external symbols
-extern WriteFile                                ; Windows API functions, not decorated
-extern ExitProcess
+    default rel
+    global _main
 
-global Start                                    ; Export symbols. The entry point
-
-section .data                                   ; Initialized data segment
-    Message        db "Hello, World!", 0Dh, 0Ah
-    MessageLength  EQU $-Message                   ; Address of this line ($) - address of Message
-
-section .bss                                    ; Uninitialized data segment
-alignb 8
-    StandardHandle resq 1
-    Written        resq 1
-
-section .text                                   ; Code segment
-
+LINUX_x86_64_SYSCALL1_WITH_RET: LINUX_x86_64_SYSCALL1
+LINUX_x86_64_SYSCALL1_NO_RET: LINUX_x86_64_SYSCALL1
 C_CALL_3_WITH_RET: C_CALL_3
 C_CALL_3_NO_RET: C_CALL_3
 
-Start:
+_main:
+    ; create stack frame
+    push rbp
+    mov rbp, rsp
+
+    ; call entry function
+    call Main
+
+    ; delete stack frame
+    mov rsp, rbp
+    pop rbp
+
+    ; return (note that rax already contains the exit code from previous call instruction)
+    ret
+
+DEBUG_PRINT_I64:
     ; arg4 (number)
     mov rax, [rsp + 8]
     push rax
@@ -50,7 +58,7 @@ Start:
     push 0
 
     ; arg1 (function address)
-    lea rax, [rel printf]   ; obtain pointer to function address
+    lea rax, [_printf wrt ..gotpcrel]   ; obtain pointer to function address
     push QWORD [rax]                    ; deference pointer
 
     ; perform call
@@ -65,24 +73,16 @@ Start:
     ; LOCAL READONLY VARIABLES
     .fmt: db "%lli", 0x0A, 0
 
-    ;other
-    sub   RSP, 8                                   ; Align the stack to a multiple of 16 bytes
+; ==================== END OF HEADER ====================
 
-    sub   RSP, 32                                  ; 32 bytes of shadow space
-    mov   ECX, STD_OUTPUT_HANDLE
-    call  GetStdHandle
-    mov   qword [REL StandardHandle], RAX
-    add   RSP, 32                                  ; Remove the 32 bytes
+; GENERATED FROM SLASM VERSION 1.0.0
 
-    sub   RSP, 32 + 8 + 8                          ; Shadow space + 5th parameter + align stack
-                                                   ; to a multiple of 16 bytes
-    mov   RCX, qword [REL StandardHandle]          ; 1st parameter
-    lea   RDX, [REL Message]                       ; 2nd parameter
-    mov   R8, MessageLength                        ; 3rd parameter
-    lea   R9, [REL Written]                        ; 4th parameter
-    mov   qword [RSP + 4 * 8], NULL                ; 5th parameter
-    call  WriteFile                                ; Output can be redirect to a file using >
-    add   RSP, 48                                  ; Remove the 48 bytes
+    section .data
+my_string: db 72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33, 0
 
-    xor   ECX, ECX
-    call  ExitProcess
+    section .text
+Main:    
+    .entry:    
+    extern
+    extern
+    extern

@@ -1,11 +1,42 @@
 extern crate textwrap;
 
+use crate::slasm::basic_block::BasicBlock;
+use crate::slasm::function::Function;
 use crate::slasm::instruction::Instruction;
 use crate::slasm::prelude::VERSION;
 use crate::slasm::program::Program;
-use crate::Function;
+use std::collections::HashMap;
 
-pub fn emit_instruction(instr: &Instruction) -> String {
+struct FunctionDefinition<'a> {
+    params: HashMap<&'a String, (u64, u64)>,
+    locals: HashMap<&'a String, (u64, u64)>,
+    returns: Vec<u64>,
+}
+
+struct GlobalContext<'a> {
+    functions: HashMap<&'a String, FunctionDefinition<'a>>,
+}
+
+struct FunctionContext<'a> {
+    global_ctx: &'a GlobalContext<'a>,
+    function_name: &'a String,
+    function_definition: &'a FunctionDefinition<'a>,
+}
+
+impl GlobalContext<'_> {
+    pub fn get_function(&self, function_name: &String) -> &FunctionDefinition {
+        if !self.functions.contains_key(function_name) {
+            panic!(
+                "Global Context does not contain a function named {}",
+                function_name
+            );
+        }
+
+        return &self.functions[function_name];
+    }
+}
+
+fn emit_instruction(instr: &Instruction, ctx: &FunctionContext) -> String {
     match instr {
         Instruction::Noop => String::from(""),
         Instruction::Or => String::from(""),
@@ -58,8 +89,39 @@ pub fn emit_instruction(instr: &Instruction) -> String {
     }
 }
 
-pub fn emit_function(function: &Function) -> String {
-    todo!();
+fn emit_basic_block(name: &String, basic_block: &BasicBlock, ctx: &FunctionContext) -> String {
+    //format!("\n{}:\n    push 0x0000000000000010\n    call DEBUG_PRINT_I64\n    add rsp, 8\n    mov rax, 17\n    ret", function.name())
+
+    format!(
+        "\n    .{}:    {}",
+        name,
+        basic_block
+            .iter()
+            .map(|instruction| emit_instruction(instruction, ctx))
+            .collect::<Vec<String>>()
+            .join("\n    ")
+    )
+}
+
+fn emit_function(function: &Function, global_ctx: &GlobalContext) -> String {
+    //format!("\n{}:\n    push 0x0000000000000010\n    call DEBUG_PRINT_I64\n    add rsp, 8\n    mov rax, 17\n    ret", function.name())
+
+    let ctx = FunctionContext {
+        global_ctx: global_ctx,
+        function_name: function.name(),
+        function_definition: global_ctx.get_function(function.name()),
+    };
+
+    format!(
+        "\n{}:    {}",
+        function.name(),
+        function
+            .basic_blocks()
+            .iter()
+            .map(|(bb_name, bb)| emit_basic_block(bb_name, bb, &ctx))
+            .collect::<Vec<String>>()
+            .join("\n    ")
+    )
 }
 
 pub fn emit_program(program: &Program, header: String) -> String {
@@ -69,7 +131,8 @@ pub fn emit_program(program: &Program, header: String) -> String {
     result = result.replace("#ENTRY_FUNC_NAME#", program.entry().as_str());
 
     result.push_str("\n\n; ==================== END OF HEADER ====================");
-    
+    result.push_str(&format!("\n\n; GENERATED FROM SLASM VERSION {}", VERSION));
+
     // Add globals
     result.push_str("\n\n    section .data");
 
@@ -87,9 +150,54 @@ pub fn emit_program(program: &Program, header: String) -> String {
     }
 
     // Add functions
-    result.push_str("\n\n    section .text");
+    let global_ctx = GlobalContext {
+        functions: {
+            let mut functions: HashMap<&String, FunctionDefinition> = HashMap::new();
 
-    result.push_str("\nMain:\n    push 0x0000000000000010\n    call DEBUG_PRINT_I64\n    add rsp, 8\n    mov rax, 17\n    ret");
+            for (func_name, func) in program.functions() {
+                functions.insert(
+                    func_name,
+                    FunctionDefinition {
+                        params: {
+                            let mut params: HashMap<&String, (u64, u64)> = HashMap::new();
+                            let mut byte_offset: u64 = 0;
+
+                            for (name, size) in func.params() {
+                                params.insert(name, (byte_offset, size.clone()));
+                                byte_offset += size;
+                            }
+
+                            params
+                        },
+                        locals: {
+                            let mut locals: HashMap<&String, (u64, u64)> = HashMap::new();
+                            let mut byte_offset: u64 = 0;
+
+                            for (name, size) in func.locals() {
+                                locals.insert(name, (byte_offset, size.clone()));
+                                byte_offset += size;
+                            }
+
+                            locals
+                        },
+                        returns: func.returns().clone(),
+                    },
+                );
+            }
+
+            functions
+        },
+    };
+
+    result.push_str("\n\n    section .text");
+    result.push_str(
+        &program
+            .functions()
+            .iter()
+            .map(|(_, function)| emit_function(function, &global_ctx))
+            .collect::<Vec<String>>()
+            .join("\n"),
+    );
 
     result
 }

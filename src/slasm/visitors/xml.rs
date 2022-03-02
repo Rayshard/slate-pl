@@ -153,7 +153,6 @@ pub fn emit_function<W: Write>(function: &Function, writer: &mut EventWriter<W>)
         .write(
             XmlEvent::start_element("function")
                 .attr("name", function.name())
-                .attr("ret_buffer_size", &function.ret_buffer_size().to_string())
                 .attr("entry", function.entry()),
         )
         .unwrap();
@@ -190,6 +189,14 @@ pub fn emit_function<W: Write>(function: &Function, writer: &mut EventWriter<W>)
         for instr in bb.iter() {
             emit_instruction(instr, writer);
         }
+
+        writer.write(XmlEvent::end_element()).unwrap();
+    }
+
+    for size in function.returns() {
+        writer
+            .write(XmlEvent::start_element("return").attr("size", &size.to_string()))
+            .unwrap();
 
         writer.write(XmlEvent::end_element()).unwrap();
     }
