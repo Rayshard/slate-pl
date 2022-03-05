@@ -3,6 +3,17 @@ use std::fmt;
 pub const VERSION: &str = "1.0.0";
 pub const WORD_SIZE: usize = 8;
 
+pub fn to_hex_string(bytes: &[u8]) -> String {
+    format!(
+        "0x{}",
+        bytes
+            .iter()
+            .map(|byte| format!("{:02x}", byte).to_uppercase())
+            .collect::<Vec<String>>()
+            .join("")
+    )
+}
+
 #[derive(Debug)]
 pub struct Word {
     pub bytes: [u8; WORD_SIZE],

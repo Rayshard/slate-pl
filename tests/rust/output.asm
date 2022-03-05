@@ -72,7 +72,6 @@ DEBUG_PRINT_I64:
 
     ; LOCAL READONLY VARIABLES
     .fmt: db "%lli", 0x0A, 0
-
 ; ==================== END OF HEADER ====================
 
 ; GENERATED FROM SLASM VERSION 1.0.0
@@ -81,8 +80,12 @@ DEBUG_PRINT_I64:
 my_string: db 72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33, 0
 
     section .text
-Main:    
-    .entry:    
-    extern
-    extern
-    extern
+Main:
+    .entry:
+        ; push 0F:0E:0D:0C:0B:0A:09:08:07:06:05:04:03:02
+        mov rax, 0x0F0E0D0C0B0A0908
+        push rax
+        mov rax, 0x0706050403020000
+        push rax
+        add rsp, 2
+

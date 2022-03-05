@@ -59,17 +59,22 @@ fn main() {
         vec![8],
     );
 
+    // let mut basic_block = BasicBlock::new();
+    // basic_block.append(Instruction::Push {
+    //     data: Word::from_i64(123).bytes.to_vec(),
+    // });
+    // basic_block.append(Instruction::Call {
+    //     target: String::from("DEBUG_PRINT_I64"),
+    // });
+    // basic_block.append(Instruction::Push {
+    //     data: Word::from_i64(64).bytes.to_vec(),
+    // });
+    // basic_block.append(Instruction::Ret);
+
     let mut basic_block = BasicBlock::new();
     basic_block.append(Instruction::Push {
-        data: Word::from_i64(123).bytes.to_vec(),
+        data: vec![15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2],
     });
-    basic_block.append(Instruction::Call {
-        target: String::from("DEBUG_PRINT_I64"),
-    });
-    basic_block.append(Instruction::Push {
-        data: Word::from_i64(64).bytes.to_vec(),
-    });
-    basic_block.append(Instruction::Ret);
 
     function.add_basic_block(String::from("entry"), basic_block);
     function.set_entry(String::from("entry"));
@@ -186,14 +191,14 @@ fn main() {
     }
 
     // Run
-    let now = time::Instant::now();
+    // let now = time::Instant::now();
 
-    println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&exec_cmd));
-    let exec_exit_code = exec_cmd.spawn().unwrap().wait().unwrap();
+    // println!("\x1b[93m[CMD]\x1b[0m {}", command_to_string(&exec_cmd));
+    // let exec_exit_code = exec_cmd.spawn().unwrap().wait().unwrap();
 
-    println!(
-        "\x1b[93m[Exited with code {}]\x1b[0m\n\x1b[93m[Finished in {} seconds]\x1b[0m",
-        exec_exit_code.code().unwrap(),
-        now.elapsed().as_secs_f64()
-    );
+    // println!(
+    //     "\x1b[93m[Exited with code {}]\x1b[0m\n\x1b[93m[Finished in {} seconds]\x1b[0m",
+    //     exec_exit_code.code().unwrap(),
+    //     now.elapsed().as_secs_f64()
+    // );
 }
