@@ -28,7 +28,11 @@ impl FunctionInfo {
         let return_buffer_size: u64 = function.returns().iter().sum();
         let return_buffer_padding = (WORD_SIZE - return_buffer_size % WORD_SIZE) % WORD_SIZE;
         let padded_return_buffer_size = return_buffer_size + return_buffer_padding;
-        let pre_call_padding = std::cmp::min(0, padded_return_buffer_size - param_buffer_size);
+        let pre_call_padding = if padded_return_buffer_size < param_buffer_size {
+            0
+        } else {
+            padded_return_buffer_size - param_buffer_size
+        };
         let pre_call_allocated_space = param_buffer_size + pre_call_padding;
         let post_call_pop_amt = pre_call_allocated_space - return_buffer_size;
 

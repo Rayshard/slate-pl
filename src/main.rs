@@ -3,6 +3,7 @@ use crate::slasm::function::Function;
 use crate::slasm::instruction::Instruction;
 use crate::slasm::prelude::Word;
 use crate::slasm::program::Program;
+use crate::slasm::visitors::json;
 use crate::slasm::visitors::nasm;
 use crate::slasm::visitors::xml;
 use ::tempdir::TempDir;
@@ -56,7 +57,7 @@ fn main() {
         String::from("Main"),
         HashMap::from([(String::from("a"), 8), (String::from("b"), 16)]),
         HashMap::from([(String::from("c"), 2), (String::from("d"), 7)]),
-        vec![8],
+        vec![],
     );
 
     // let mut basic_block = BasicBlock::new();
@@ -75,6 +76,9 @@ fn main() {
     basic_block.append(Instruction::Push {
         data: vec![15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2],
     });
+    basic_block.append(Instruction::Call {
+        target: String::from("Main"),
+    });
 
     function.add_basic_block(String::from("entry"), basic_block);
     function.set_entry(String::from("entry"));
@@ -89,6 +93,13 @@ fn main() {
         .create_writer(&mut xml_file);
 
     xml::emit_program(&program, &mut xml_writer);
+
+    // Emit JSON serialization
+    fs::write(
+        format!("tests/rust/{}.slasm.json", program.name()),
+        serde_json::to_string_pretty(&json::emit_program(&program)).unwrap(),
+    )
+    .expect("Unable to write to json file!");
 
     // Emit nasm and compile
     let os_name = env::consts::OS;

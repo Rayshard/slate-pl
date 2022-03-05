@@ -89,3 +89,7 @@ Main:
         push rax
         add rsp, 2
 
+        ; call Main
+        call Main
+        add rsp, 24 ; leave only the return buffer on the stack
+
